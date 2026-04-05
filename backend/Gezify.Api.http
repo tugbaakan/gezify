@@ -1,0 +1,13 @@
+@Gezify.Api_HostAddress = https://localhost:7156
+
+### HTTPS (default `dotnet run` profile)
+
+GET {{Gezify.Api_HostAddress}}/health
+Accept: application/json
+
+### HTTP only (`dotnet run --launch-profile http`)
+
+GET http://localhost:8050/health
+Accept: application/json
+
+###
