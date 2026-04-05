@@ -1,0 +1,35 @@
+.auth-callback {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.auth-callback__card {
+  max-width: 22rem;
+  text-align: center;
+}
+
+.auth-callback__message {
+  margin: 0 0 1.25rem;
+  color: var(--text-h);
+  line-height: 1.5;
+}
+
+.auth-callback__link {
+  color: var(--page-accent-text, #0f766e);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.auth-callback__link:hover {
+  text-decoration: underline;
+}
+
+@media (prefers-color-scheme: dark) {
+  .auth-callback__link {
+    color: #5eead4;
+  }
+}
