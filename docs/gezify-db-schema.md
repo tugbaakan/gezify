@@ -76,7 +76,7 @@ travels ──< settlement_transfers
 |--------|------|-------------|-------|
 | `id` | `UUID` | `PRIMARY KEY`, default `gen_random_uuid()` | |
 | `name` | `VARCHAR` | `NOT NULL` | |
-| `created_by` | `UUID` | `NOT NULL`, `FK → users(id)` | |
+| `created_by` | `UUID` | `NOT NULL`, `FK → users(id)` **`ON DELETE RESTRICT`** | Keeps creator reference; user cannot be deleted while still referenced as creator |
 | `status` | `travel_status` | `NOT NULL`, default `active` | |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL`, default `now()` | |
 | `settled_at` | `TIMESTAMPTZ` | `NULL` | Set when settlement completes |
@@ -123,7 +123,7 @@ travels ──< settlement_transfers
 | `id` | `UUID` | `PRIMARY KEY`, default `gen_random_uuid()` | |
 | `travel_id` | `UUID` | `NOT NULL`, `FK → travels(id)` `ON DELETE CASCADE` | |
 | `added_by` | `UUID` | `NOT NULL`, `FK → users(id)` | Who entered the row |
-| `paid_by` | `UUID` | `NOT NULL`, `FK → users(id)` | Who paid (set at creation or via payer update) |
+| `paid_by` | `UUID` | `NULL`, `FK → users(id)` | Who paid; `NULL` until `PATCH /expenses/{id}/payer` (two-step UX) |
 | `category` | `expense_category` | `NOT NULL` | |
 | `location` | `VARCHAR` | | Free text |
 | `amount` | `DECIMAL(12,2)` | `NOT NULL` | Original amount in `currency` |
@@ -134,8 +134,6 @@ travels ──< settlement_transfers
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL`, default `now()` | |
 
 **Suggested indexes:** `(travel_id, expense_date DESC)` or `(travel_id, created_at DESC)` for list views; `(travel_id, paid_by)` for settlement aggregation.
-
-*Implementation note:* If the product allows “who paid?” after create, `paid_by` may initially equal `added_by` or use a nullable column until patch; the architecture describes a two-step flow—align nullability with that UX.
 
 ---
 
@@ -172,7 +170,7 @@ travels ──< settlement_transfers
 
 | Child table | Parent | On delete (suggested) |
 |-------------|--------|------------------------|
-| `travels.created_by` | `users` | `RESTRICT` or `SET NULL` per product policy |
+| `travels.created_by` | `users` | **`RESTRICT`** (v1 product policy) |
 | `travel_members` | `travels`, `users` | `CASCADE` on travel |
 | `invitations` | `travels`, `users` | `CASCADE` on travel |
 | `expenses` | `travels`, `users` | `CASCADE` on travel |

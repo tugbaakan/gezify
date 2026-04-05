@@ -1,12 +1,20 @@
 using Gezify.Api.Data;
+using Gezify.Api.Data.Enums;
 using Gezify.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = DatabaseConnection.Resolve(builder.Configuration, builder.Environment);
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+dataSourceBuilder.MapEnum<TravelStatus>("travel_status");
+dataSourceBuilder.MapEnum<InvitationStatus>("invitation_status");
+dataSourceBuilder.MapEnum<ExpenseCategory>("expense_category");
+var dataSource = dataSourceBuilder.Build();
+builder.Services.AddSingleton(dataSource);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(dataSource));
 
 var port = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrEmpty(port))

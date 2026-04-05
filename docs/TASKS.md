@@ -13,11 +13,11 @@
 
 ## Database (PostgreSQL / EF Core)
 
-- [ ] Define enums: `travel_status`, `invitation_status`, `expense_category`.
-- [ ] Implement tables: `users`, `travels`, `travel_members`, `invitations`, `expenses`, `finished_acks`, `settlement_transfers`.
-- [ ] Add FKs, PKs, and suggested indexes (incl. `settlement_transfers`: `from_user_id <> to_user_id`).
-- [ ] Resolve policy for `travels.created_by` on user delete (`RESTRICT` vs `SET NULL`).
-- [ ] Align `expenses.paid_by` nullability with two-step “who paid?” UX.
+- [x] Define enums: `travel_status`, `invitation_status`, `expense_category`.
+- [x] Implement tables: `users`, `travels`, `travel_members`, `invitations`, `expenses`, `finished_acks`, `settlement_transfers`.
+- [x] Add FKs, PKs, and suggested indexes (incl. `settlement_transfers`: `from_user_id <> to_user_id`).
+- [x] Resolve policy for `travels.created_by` on user delete (`RESTRICT` vs `SET NULL`).
+- [x] Align `expenses.paid_by` nullability with two-step “who paid?” UX.
 
 ## Backend — auth & gateway
 
