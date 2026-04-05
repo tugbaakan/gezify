@@ -21,10 +21,10 @@
 
 ## Backend — auth & gateway
 
-- [ ] **POST `/auth/google`** — exchange code, verify with Google, create/load `users`, issue JWT (or validate Google JWT consistently).
-- [ ] **GET `/auth/me`** — current user (safe fields).
-- [ ] JWT validation middleware on protected routes; standardized **401/403/404/422/500** JSON errors.
-- [ ] **CORS** restricted to `ALLOWED_ORIGIN`.
+- [x] **POST `/auth/google`** — exchange code, verify with Google, create/load `users`, issue JWT (or validate Google JWT consistently).
+- [x] **GET `/auth/me`** — current user (safe fields).
+- [x] JWT validation middleware on protected routes; standardized **401/403/404/422/500** JSON errors.
+- [x] **CORS** restricted to `ALLOWED_ORIGIN`.
 
 ## Backend — domain APIs (travel-scoped auth: must be `travel_member`)
 

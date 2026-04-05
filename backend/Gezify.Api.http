@@ -1,5 +1,9 @@
 @Gezify.Api_HostAddress = https://localhost:7156
 
+### Swagger UI (Development only)
+
+# Browser: {{Gezify.Api_HostAddress}}/swagger
+
 ### HTTPS (default `dotnet run` profile)
 
 GET {{Gezify.Api_HostAddress}}/health
@@ -8,6 +12,14 @@ Accept: application/json
 ### HTTP only (`dotnet run --launch-profile http`)
 
 GET http://localhost:8050/health
+Accept: application/json
+
+### GET /auth/me (replace TOKEN with JWT from POST /auth/google)
+
+@token = YOUR_JWT_HERE
+
+GET {{Gezify.Api_HostAddress}}/auth/me
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ###
