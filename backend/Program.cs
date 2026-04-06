@@ -55,7 +55,7 @@ builder.Services.PostConfigure<ExchangeRateOptions>(opts =>
 // Domain config: also Invitation:BaseUrl, Invitation:SigningKey, SendGrid:*, ExchangeRate:ApiKey (see appsettings).
 
 builder.Services.AddSingleton<IInvitationTokenService, InvitationTokenService>();
-builder.Services.AddSingleton<IInvitationEmailSender, SendGridInvitationEmailSender>();
+builder.Services.AddSingleton<IGezifyEmailSender, SendGridGezifyEmailSender>();
 builder.Services.AddSingleton<IExchangeRateService, ExchangeRateService>();
 
 builder.Services.AddHttpClient(ExchangeRateService.HttpClientName, client =>

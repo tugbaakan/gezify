@@ -36,10 +36,10 @@
 - [x] **GET/POST `/travels/{travelId}/expenses`** — FX at save; store `amount_try`, `exchange_rate`, `added_by`.
 - [x] **GET `/expenses/{expenseId}`**, **PATCH `/expenses/{expenseId}/payer`** — set `paid_by`.
 
-## Services (backend)
+## External Services (backend)
 
-- [ ] **Email (SendGrid)** — invitation emails; notify all when travel fully finished (optional: expense-added later).
-- [ ] **FX (ExchangeRate-API)** — `{from}/TRY`, **~15 min cache**; on failure, fail expense create (no silent fallback).
+- [x] **Email (SendGrid)** — invitation emails; notify all when travel fully finished (optional: expense-added later).
+- [x] **FX (ExchangeRate-API)** — `{from}/TRY`, **~15 min cache**; on failure, fail expense create (no silent fallback).
 
 ## Settlement engine
 

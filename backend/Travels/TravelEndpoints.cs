@@ -7,6 +7,7 @@ using Gezify.Api.Data.Enums;
 using Gezify.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Gezify.Api.Travels;
@@ -23,6 +24,7 @@ public static class TravelEndpoints
         group.MapPatch("/{travelId:guid}", PatchTravelAsync);
         group.MapGet("/{travelId:guid}/members", ListMembersAsync);
         group.MapPost("/{travelId:guid}/invitations", CreateInvitationAsync);
+        group.MapPost("/{travelId:guid}/finish", FinishTravelAsync);
         group.MapGet("/{travelId:guid}/settlement", GetSettlementAsync);
 
         return group;
@@ -218,7 +220,7 @@ public static class TravelEndpoints
         [FromBody] CreateInvitationRequest? body,
         ApplicationDbContext db,
         IInvitationTokenService invitationTokens,
-        IInvitationEmailSender emailSender,
+        IGezifyEmailSender emailSender,
         IOptions<InvitationOptions> invitationOptions,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
@@ -311,6 +313,127 @@ public static class TravelEndpoints
             new InvitationCreatedDto(invitation.Id, invitation.Email, invitation.Status, invitation.CreatedAt));
     }
 
+    private static async Task<IResult> FinishTravelAsync(
+        Guid travelId,
+        HttpContext httpContext,
+        ApplicationDbContext db,
+        IGezifyEmailSender emailSender,
+        IOptions<InvitationOptions> invitationOptions,
+        IHostEnvironment environment,
+        ILoggerFactory loggerFactory,
+        CancellationToken cancellationToken)
+    {
+        var logger = loggerFactory.CreateLogger(nameof(TravelEndpoints));
+        var userId = httpContext.User.TryGetUserId();
+        if (userId is null)
+            return Results.Json(ApiErrors.Unauthorized("Authentication required."), statusCode: StatusCodes.Status401Unauthorized);
+
+        var denied = await TravelAuthorization.RequireTravelMemberAsync(db, travelId, userId.Value, cancellationToken);
+        if (denied is not null)
+            return denied;
+
+        var travel = await db.Travels.FirstOrDefaultAsync(t => t.Id == travelId, cancellationToken);
+        if (travel is null)
+            return Results.Json(ApiErrors.NotFound("Travel not found."), statusCode: StatusCodes.Status404NotFound);
+
+        if (travel.Status != TravelStatus.Active)
+        {
+            var existingAck = await db.FinishedAcks.AsNoTracking()
+                .FirstOrDefaultAsync(a => a.TravelId == travelId && a.UserId == userId.Value, cancellationToken);
+            var everyoneDone = travel.Status is TravelStatus.AllFinished or TravelStatus.Settled;
+            return Results.Ok(new TravelFinishDto(
+                travel.Status,
+                existingAck is not null,
+                everyoneDone,
+                existingAck?.AckedAt));
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var ack = await db.FinishedAcks.FirstOrDefaultAsync(
+            a => a.TravelId == travelId && a.UserId == userId.Value,
+            cancellationToken);
+        if (ack is null)
+        {
+            ack = new FinishedAck
+            {
+                TravelId = travelId,
+                UserId = userId.Value,
+                AckedAt = now
+            };
+            db.FinishedAcks.Add(ack);
+        }
+        else
+            ack.AckedAt = now;
+
+        var memberIds = await db.TravelMembers
+            .Where(m => m.TravelId == travelId)
+            .Select(m => m.UserId)
+            .ToListAsync(cancellationToken);
+
+        var ackedMemberCount = await db.FinishedAcks
+            .Where(a => a.TravelId == travelId && memberIds.Contains(a.UserId))
+            .CountAsync(cancellationToken);
+
+        var justCompleted = false;
+        if (memberIds.Count > 0 && ackedMemberCount == memberIds.Count)
+        {
+            travel.Status = TravelStatus.AllFinished;
+            justCompleted = true;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        if (justCompleted)
+        {
+            var opts = invitationOptions.Value;
+            var baseUrl = opts.BaseUrl?.Trim().TrimEnd('/');
+            if (string.IsNullOrEmpty(baseUrl))
+            {
+                if (environment.IsDevelopment())
+                    baseUrl = "http://localhost:5173";
+            }
+
+            if (string.IsNullOrEmpty(baseUrl))
+            {
+                logger.LogError(
+                    "Invitation:BaseUrl (or INVITATION_BASE_URL) is not set; skipping travel-finished emails for travel {TravelId}",
+                    travelId);
+            }
+            else
+            {
+                var travelUrl = $"{baseUrl}/travels/{travel.Id}";
+                var members = await db.TravelMembers
+                    .AsNoTracking()
+                    .Where(m => m.TravelId == travelId)
+                    .Include(m => m.User)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var m in members)
+                {
+                    var email = m.User?.Email;
+                    if (string.IsNullOrWhiteSpace(email))
+                        continue;
+
+                    try
+                    {
+                        await emailSender.SendTravelEveryoneFinishedAsync(
+                            email.Trim(),
+                            travel.Name,
+                            travelUrl,
+                            cancellationToken);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        logger.LogError(ex, "Could not send travel-finished email to {Email} for travel {TravelId}", email, travelId);
+                    }
+                }
+            }
+        }
+
+        var everyoneFinished = travel.Status is TravelStatus.AllFinished or TravelStatus.Settled;
+        return Results.Ok(new TravelFinishDto(travel.Status, true, everyoneFinished, ack.AckedAt));
+    }
+
     private static Dictionary<string, string[]> ValidateTravelName(string? name)
     {
         var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
@@ -379,3 +502,9 @@ public sealed record SettlementTransferDto(
     decimal AmountTry);
 
 public sealed record TravelSettlementDto(TravelStatus Status, IReadOnlyList<SettlementTransferDto> Transfers);
+
+public sealed record TravelFinishDto(
+    TravelStatus Status,
+    bool YouHaveAcked,
+    bool AllMembersHaveAcked,
+    DateTimeOffset? YourAckedAt);
