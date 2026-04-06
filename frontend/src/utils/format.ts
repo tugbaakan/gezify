@@ -26,3 +26,12 @@ export function travelStatusLabel(status: string): string {
   }
   return map[status] ?? status
 }
+
+export function invitationStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    pending: 'Pending',
+    accepted: 'Accepted',
+    expired: 'Expired',
+  }
+  return map[status] ?? status
+}

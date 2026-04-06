@@ -53,6 +53,27 @@ export type InvitationValidation = {
   travelName: string | null
 }
 
+export type InvitationStatus = 'pending' | 'accepted' | 'expired'
+
+export type InvitationCreated = {
+  id: string
+  email: string
+  status: InvitationStatus
+  createdAt: string
+}
+
+/** Row from GET /travels/:id/invitations (no token). */
+export type TravelInvitationListItem = {
+  id: string
+  email: string
+  status: InvitationStatus
+  createdAt: string
+  acceptedAt: string | null
+  invitedByUserId: string
+  invitedByEmail: string
+  invitedByDisplayName: string | null
+}
+
 export type PublicUser = {
   id: string
   email: string

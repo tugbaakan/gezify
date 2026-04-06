@@ -137,6 +137,10 @@
   background: var(--bg);
 }
 
+.travel-detail__section + .travel-detail__section {
+  margin-top: 1.25rem;
+}
+
 .travel-detail__section-title {
   font-family: var(--heading);
   font-size: 1rem;
@@ -211,4 +215,223 @@
   gap: 0.35rem 1.25rem;
   font-size: 0.8125rem;
   color: var(--text);
+}
+
+.travel-detail__members {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.travel-detail__member {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.travel-detail__member:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.travel-detail__member-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--text-h);
+}
+
+.travel-detail__member-email {
+  font-size: 0.8125rem;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.travel-detail__invite {
+  margin: 0;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.travel-detail__invite-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 1rem 0 0.35rem;
+}
+
+.travel-detail__invite-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.travel-detail__invite-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.travel-detail__invite-input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.travel-detail__invite-input:focus {
+  outline: 2px solid #0d9488;
+  outline-offset: 1px;
+}
+
+.travel-detail__invite-input:disabled {
+  opacity: 0.7;
+}
+
+.travel-detail__invite-submit {
+  flex: 0 0 auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  .travel-detail__invite-input:focus {
+    outline-color: #5eead4;
+  }
+}
+
+.travel-detail__invite-msg {
+  margin: 0.65rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.travel-detail__invite-msg--error {
+  color: #b91c1c;
+}
+
+.travel-detail__invite-msg--ok {
+  color: #0f766e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .travel-detail__invite-msg--error {
+    color: #fca5a5;
+  }
+
+  .travel-detail__invite-msg--ok {
+    color: #5eead4;
+  }
+}
+
+.travel-detail__invite-disabled {
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.travel-detail__invites-table-wrap {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.travel-detail__invites-table-title {
+  font-family: var(--heading);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--text-h);
+}
+
+.travel-detail__table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
+}
+
+.travel-detail__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.travel-detail__table th,
+.travel-detail__table td {
+  text-align: left;
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.travel-detail__table th {
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+}
+
+.travel-detail__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.travel-detail__table-cell--email {
+  word-break: break-all;
+  max-width: 10rem;
+}
+
+.travel-detail__table-cell--date {
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.travel-detail__invite-status {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  line-height: 1.2;
+}
+
+.travel-detail__invite-status--pending {
+  background: rgba(14, 165, 233, 0.15);
+  color: #0369a1;
+}
+
+.travel-detail__invite-status--accepted {
+  background: rgba(13, 148, 136, 0.18);
+  color: #0f766e;
+}
+
+.travel-detail__invite-status--expired {
+  background: rgba(120, 113, 108, 0.2);
+  color: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  .travel-detail__invite-status--pending {
+    background: rgba(56, 189, 248, 0.12);
+    color: #7dd3fc;
+  }
+
+  .travel-detail__invite-status--accepted {
+    background: rgba(45, 212, 191, 0.12);
+    color: #5eead4;
+  }
+
+  .travel-detail__invite-status--expired {
+    background: rgba(168, 162, 158, 0.15);
+    color: var(--text);
+  }
 }

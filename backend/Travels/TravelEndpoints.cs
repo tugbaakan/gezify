@@ -24,6 +24,7 @@ public static class TravelEndpoints
         group.MapGet("/{travelId:guid}", GetTravelAsync);
         group.MapPatch("/{travelId:guid}", PatchTravelAsync);
         group.MapGet("/{travelId:guid}/members", ListMembersAsync);
+        group.MapGet("/{travelId:guid}/invitations", ListInvitationsAsync);
         group.MapPost("/{travelId:guid}/invitations", CreateInvitationAsync);
         group.MapPost("/{travelId:guid}/finish", FinishTravelAsync);
         group.MapGet("/{travelId:guid}/settlement", GetSettlementAsync);
@@ -200,6 +201,42 @@ public static class TravelEndpoints
             .ToListAsync(cancellationToken);
 
         return Results.Ok(members);
+    }
+
+    private static async Task<IResult> ListInvitationsAsync(
+        Guid travelId,
+        HttpContext httpContext,
+        ApplicationDbContext db,
+        CancellationToken cancellationToken)
+    {
+        var userId = httpContext.User.TryGetUserId();
+        if (userId is null)
+            return Results.Json(ApiErrors.Unauthorized("Authentication required."), statusCode: StatusCodes.Status401Unauthorized);
+
+        var denied = await TravelAuthorization.RequireTravelMemberAsync(db, travelId, userId.Value, cancellationToken);
+        if (denied is not null)
+            return denied;
+
+        var travelExists = await db.Travels.AsNoTracking().AnyAsync(t => t.Id == travelId, cancellationToken);
+        if (!travelExists)
+            return Results.Json(ApiErrors.NotFound("Travel not found."), statusCode: StatusCodes.Status404NotFound);
+
+        var items = await db.Invitations
+            .AsNoTracking()
+            .Where(i => i.TravelId == travelId)
+            .OrderByDescending(i => i.CreatedAt)
+            .Select(i => new TravelInvitationListItemDto(
+                i.Id,
+                i.Email,
+                i.Status,
+                i.CreatedAt,
+                i.AcceptedAt,
+                i.InvitedById,
+                i.InvitedBy.Email,
+                i.InvitedBy.DisplayName))
+            .ToListAsync(cancellationToken);
+
+        return Results.Ok(items);
     }
 
     private static async Task<IResult> CreateInvitationAsync(
@@ -638,6 +675,16 @@ public sealed record InvitationCreatedDto(
     string Email,
     InvitationStatus Status,
     DateTimeOffset CreatedAt);
+
+public sealed record TravelInvitationListItemDto(
+    Guid Id,
+    string Email,
+    InvitationStatus Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? AcceptedAt,
+    Guid InvitedByUserId,
+    string InvitedByEmail,
+    string? InvitedByDisplayName);
 
 public sealed record SettlementTransferDto(
     Guid FromUserId,
