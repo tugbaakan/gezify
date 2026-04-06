@@ -62,7 +62,11 @@ function SettlementContent({ travelId }: { travelId: string }) {
   }, [travelId])
 
   const transfers = settlement?.transfers ?? []
-  const settled = settlement?.status === 'settled'
+  const st = settlement?.status
+  const preview = settlement?.isSettlementPreview ?? false
+  const summary = settlement?.summary ?? null
+  const blockedAllFinished =
+    st === 'allFinished' && preview && !summary && transfers.length === 0
 
   return (
     <main className="settlement__main">
@@ -92,6 +96,9 @@ function SettlementContent({ travelId }: { travelId: string }) {
           <section className="settlement__card" aria-labelledby="sett-heading">
             <h2 id="sett-heading" className="settlement__section-title">
               Suggested transfers
+              {preview ? (
+                <span className="settlement__muted"> (preview)</span>
+              ) : null}
             </h2>
             {settlementLoading ? (
               <p className="settlement__muted">Loading settlement…</p>
@@ -99,10 +106,16 @@ function SettlementContent({ travelId }: { travelId: string }) {
               <p className="settlement__warn" role="alert">
                 {settlementError}
               </p>
-            ) : !settled && transfers.length === 0 ? (
+            ) : st === 'active' && transfers.length === 0 ? (
               <p className="settlement__muted">
                 No settlement transfers yet. When everyone has finished the trip and
                 balances are computed, who should pay whom will appear here.
+              </p>
+            ) : blockedAllFinished ? (
+              <p className="settlement__muted">
+                Everyone has finished, but balances cannot be computed yet. Make sure
+                every expense has a payer, then mark the trip finished again from the
+                trip page.
               </p>
             ) : transfers.length === 0 ? (
               <p className="settlement__muted">Everyone is even — no transfers needed.</p>
@@ -124,6 +137,31 @@ function SettlementContent({ travelId }: { travelId: string }) {
                 ))}
               </ul>
             )}
+            {!settlementLoading && !settlementError && summary ? (
+              <div className="settlement__summary" aria-labelledby="sett-sum-heading">
+                <h3 id="sett-sum-heading" className="settlement__section-title">
+                  Balances (TRY)
+                </h3>
+                <p className="settlement__muted">
+                  Total {formatTry(summary.totalAmountTry)} · {summary.memberCount}{' '}
+                  {summary.memberCount === 1 ? 'person' : 'people'} · ~{' '}
+                  {formatTry(summary.equalShareTry)} each (rounded)
+                </p>
+                <ul className="settlement__balance-list">
+                  {summary.members.map((m) => (
+                    <li key={m.userId} className="settlement__balance-row">
+                      <span className="settlement__party">
+                        {personLabel(m.email, m.displayName)}
+                      </span>
+                      <span className="settlement__amount">
+                        paid {formatTry(m.paidTry)} · share {formatTry(m.shareOwedTry)} · net{' '}
+                        {formatTry(m.netTry)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </section>
 
           <p className="settlement__back">

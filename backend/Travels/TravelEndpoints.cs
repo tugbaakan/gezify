@@ -5,6 +5,7 @@ using Gezify.Api.Data;
 using Gezify.Api.Data.Entities;
 using Gezify.Api.Data.Enums;
 using Gezify.Api.Services;
+using Gezify.Api.Settlement;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -167,21 +168,8 @@ public static class TravelEndpoints
         if (travel is null)
             return Results.Json(ApiErrors.NotFound("Travel not found."), statusCode: StatusCodes.Status404NotFound);
 
-        var rows = await db.SettlementTransfers
-            .AsNoTracking()
-            .Where(s => s.TravelId == travelId)
-            .OrderBy(s => s.CreatedAt)
-            .Select(s => new SettlementTransferDto(
-                s.FromUserId,
-                s.FromUser!.Email,
-                s.FromUser.DisplayName,
-                s.ToUserId,
-                s.ToUser!.Email,
-                s.ToUser.DisplayName,
-                s.AmountTry))
-            .ToListAsync(cancellationToken);
-
-        return Results.Ok(new TravelSettlementDto(travel.Status, rows));
+        var dto = await BuildTravelSettlementDtoAsync(db, travelId, travel.Status, cancellationToken);
+        return Results.Ok(dto);
     }
 
     private static async Task<IResult> ListMembersAsync(
@@ -336,19 +324,28 @@ public static class TravelEndpoints
         if (travel is null)
             return Results.Json(ApiErrors.NotFound("Travel not found."), statusCode: StatusCodes.Status404NotFound);
 
-        if (travel.Status != TravelStatus.Active)
+        if (travel.Status == TravelStatus.Settled)
+            return Results.Ok(await BuildTravelFinishDtoAsync(db, travelId, userId.Value, cancellationToken));
+
+        if (travel.Status == TravelStatus.AllFinished)
         {
-            var existingAck = await db.FinishedAcks.AsNoTracking()
-                .FirstOrDefaultAsync(a => a.TravelId == travelId && a.UserId == userId.Value, cancellationToken);
-            var everyoneDone = travel.Status is TravelStatus.AllFinished or TravelStatus.Settled;
-            return Results.Ok(new TravelFinishDto(
-                travel.Status,
-                existingAck is not null,
-                everyoneDone,
-                existingAck?.AckedAt));
+            var now = DateTimeOffset.UtcNow;
+            var (ok, settleError) = await TravelSettlementHelper.TryPersistSettlementAsync(
+                db, travel, now, cancellationToken);
+            if (!ok)
+            {
+                return Results.Json(
+                    ApiErrors.Validation(new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["settlement"] = [settleError ?? "Settlement could not be completed."]
+                    }),
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+            }
+
+            return Results.Ok(await BuildTravelFinishDtoAsync(db, travelId, userId.Value, cancellationToken));
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var ackNow = DateTimeOffset.UtcNow;
         var ack = await db.FinishedAcks.FirstOrDefaultAsync(
             a => a.TravelId == travelId && a.UserId == userId.Value,
             cancellationToken);
@@ -358,12 +355,12 @@ public static class TravelEndpoints
             {
                 TravelId = travelId,
                 UserId = userId.Value,
-                AckedAt = now
+                AckedAt = ackNow
             };
             db.FinishedAcks.Add(ack);
         }
         else
-            ack.AckedAt = now;
+            ack.AckedAt = ackNow;
 
         var memberIds = await db.TravelMembers
             .Where(m => m.TravelId == travelId)
@@ -374,64 +371,214 @@ public static class TravelEndpoints
             .Where(a => a.TravelId == travelId && memberIds.Contains(a.UserId))
             .CountAsync(cancellationToken);
 
-        var justCompleted = false;
-        if (memberIds.Count > 0 && ackedMemberCount == memberIds.Count)
-        {
-            travel.Status = TravelStatus.AllFinished;
-            justCompleted = true;
-        }
-
         await db.SaveChangesAsync(cancellationToken);
 
-        if (justCompleted)
+        var justAllAcked = memberIds.Count > 0 && ackedMemberCount == memberIds.Count;
+        if (justAllAcked)
         {
-            var opts = invitationOptions.Value;
-            var baseUrl = opts.BaseUrl?.Trim().TrimEnd('/');
-            if (string.IsNullOrEmpty(baseUrl))
-            {
-                if (environment.IsDevelopment())
-                    baseUrl = "http://localhost:5173";
-            }
+            travel.Status = TravelStatus.AllFinished;
+            await db.SaveChangesAsync(cancellationToken);
 
-            if (string.IsNullOrEmpty(baseUrl))
-            {
-                logger.LogError(
-                    "Invitation:BaseUrl (or INVITATION_BASE_URL) is not set; skipping travel-finished emails for travel {TravelId}",
-                    travelId);
-            }
-            else
-            {
-                var travelUrl = $"{baseUrl}/travels/{travel.Id}";
-                var members = await db.TravelMembers
-                    .AsNoTracking()
-                    .Where(m => m.TravelId == travelId)
-                    .Include(m => m.User)
-                    .ToListAsync(cancellationToken);
+            await SendTravelEveryoneFinishedEmailsAsync(
+                db,
+                emailSender,
+                invitationOptions,
+                environment,
+                logger,
+                travel.Id,
+                travel.Name,
+                cancellationToken);
 
-                foreach (var m in members)
-                {
-                    var email = m.User?.Email;
-                    if (string.IsNullOrWhiteSpace(email))
-                        continue;
-
-                    try
+            var (settleOk, settleErr) = await TravelSettlementHelper.TryPersistSettlementAsync(
+                db, travel, ackNow, cancellationToken);
+            if (!settleOk)
+            {
+                return Results.Json(
+                    ApiErrors.Validation(new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
                     {
-                        await emailSender.SendTravelEveryoneFinishedAsync(
-                            email.Trim(),
-                            travel.Name,
-                            travelUrl,
-                            cancellationToken);
-                    }
-                    catch (InvalidOperationException ex)
-                    {
-                        logger.LogError(ex, "Could not send travel-finished email to {Email} for travel {TravelId}", email, travelId);
-                    }
-                }
+                        ["settlement"] = [settleErr ?? "Settlement could not be completed."]
+                    }),
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
             }
         }
 
-        var everyoneFinished = travel.Status is TravelStatus.AllFinished or TravelStatus.Settled;
-        return Results.Ok(new TravelFinishDto(travel.Status, true, everyoneFinished, ack.AckedAt));
+        return Results.Ok(await BuildTravelFinishDtoAsync(db, travelId, userId.Value, cancellationToken));
+    }
+
+    private static async Task<TravelFinishDto> BuildTravelFinishDtoAsync(
+        ApplicationDbContext db,
+        Guid travelId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var travel = await db.Travels.AsNoTracking()
+            .FirstAsync(t => t.Id == travelId, cancellationToken);
+        var existingAck = await db.FinishedAcks.AsNoTracking()
+            .FirstOrDefaultAsync(a => a.TravelId == travelId && a.UserId == userId, cancellationToken);
+        var everyoneDone = travel.Status is TravelStatus.AllFinished or TravelStatus.Settled;
+        return new TravelFinishDto(
+            travel.Status,
+            existingAck is not null,
+            everyoneDone,
+            existingAck?.AckedAt);
+    }
+
+    private static async Task SendTravelEveryoneFinishedEmailsAsync(
+        ApplicationDbContext db,
+        IGezifyEmailSender emailSender,
+        IOptions<InvitationOptions> invitationOptions,
+        IHostEnvironment environment,
+        ILogger logger,
+        Guid travelId,
+        string travelName,
+        CancellationToken cancellationToken)
+    {
+        var opts = invitationOptions.Value;
+        var baseUrl = opts.BaseUrl?.Trim().TrimEnd('/');
+        if (string.IsNullOrEmpty(baseUrl))
+        {
+            if (environment.IsDevelopment())
+                baseUrl = "http://localhost:5173";
+        }
+
+        if (string.IsNullOrEmpty(baseUrl))
+        {
+            logger.LogError(
+                "Invitation:BaseUrl (or INVITATION_BASE_URL) is not set; skipping travel-finished emails for travel {TravelId}",
+                travelId);
+            return;
+        }
+
+        var travelUrl = $"{baseUrl}/travels/{travelId}";
+        var members = await db.TravelMembers
+            .AsNoTracking()
+            .Where(m => m.TravelId == travelId)
+            .Include(m => m.User)
+            .ToListAsync(cancellationToken);
+
+        foreach (var m in members)
+        {
+            var email = m.User?.Email;
+            if (string.IsNullOrWhiteSpace(email))
+                continue;
+
+            try
+            {
+                await emailSender.SendTravelEveryoneFinishedAsync(
+                    email.Trim(),
+                    travelName,
+                    travelUrl,
+                    cancellationToken);
+            }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogError(ex, "Could not send travel-finished email to {Email} for travel {TravelId}", email, travelId);
+            }
+        }
+    }
+
+    private static async Task<TravelSettlementDto> BuildTravelSettlementDtoAsync(
+        ApplicationDbContext db,
+        Guid travelId,
+        TravelStatus status,
+        CancellationToken cancellationToken)
+    {
+        if (status == TravelStatus.Active)
+            return new TravelSettlementDto(status, [], null, false);
+
+        if (status == TravelStatus.Settled)
+        {
+            var rows = await db.SettlementTransfers
+                .AsNoTracking()
+                .Where(s => s.TravelId == travelId)
+                .OrderBy(s => s.CreatedAt)
+                .Select(s => new SettlementTransferDto(
+                    s.FromUserId,
+                    s.FromUser!.Email,
+                    s.FromUser.DisplayName,
+                    s.ToUserId,
+                    s.ToUser!.Email,
+                    s.ToUser.DisplayName,
+                    s.AmountTry))
+                .ToListAsync(cancellationToken);
+
+            var (computed, _) = await TravelSettlementHelper.LoadComputationAsync(db, travelId, cancellationToken);
+            var summary = computed is null
+                ? null
+                : await ToSettlementSummaryDtoAsync(db, computed.Summary, cancellationToken);
+            return new TravelSettlementDto(status, rows, summary, false);
+        }
+
+        // all_finished: live preview (not yet persisted or settlement blocked)
+        var (preview, _) = await TravelSettlementHelper.LoadComputationAsync(db, travelId, cancellationToken);
+        if (preview is null)
+            return new TravelSettlementDto(status, [], null, true);
+
+        var previewRows = await MapComputedTransfersToDtoAsync(db, preview.Transfers, cancellationToken);
+        var previewSummary = await ToSettlementSummaryDtoAsync(db, preview.Summary, cancellationToken);
+        return new TravelSettlementDto(status, previewRows, previewSummary, true);
+    }
+
+    private static async Task<SettlementSummaryDto> ToSettlementSummaryDtoAsync(
+        ApplicationDbContext db,
+        SettlementCalculator.Summary summary,
+        CancellationToken cancellationToken)
+    {
+        var ids = summary.Members.Select(m => m.UserId).Distinct().ToList();
+        var users = await db.Users
+            .AsNoTracking()
+            .Where(u => ids.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var members = summary.Members.Select(m =>
+        {
+            var u = users[m.UserId];
+            return new SettlementMemberBalanceDto(
+                m.UserId,
+                u.Email,
+                u.DisplayName,
+                m.PaidTry,
+                m.ShareOwedTry,
+                m.NetTry);
+        }).ToList();
+
+        return new SettlementSummaryDto(
+            summary.TotalAmountTry,
+            summary.MemberCount,
+            summary.EqualShareTryRounded,
+            members);
+    }
+
+    private static async Task<IReadOnlyList<SettlementTransferDto>> MapComputedTransfersToDtoAsync(
+        ApplicationDbContext db,
+        IReadOnlyList<SettlementCalculator.Transfer> transfers,
+        CancellationToken cancellationToken)
+    {
+        if (transfers.Count == 0)
+            return [];
+
+        var ids = transfers.SelectMany(t => new[] { t.FromUserId, t.ToUserId }).Distinct().ToList();
+        var users = await db.Users
+            .AsNoTracking()
+            .Where(u => ids.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var list = new List<SettlementTransferDto>(transfers.Count);
+        foreach (var t in transfers)
+        {
+            var from = users[t.FromUserId];
+            var to = users[t.ToUserId];
+            list.Add(new SettlementTransferDto(
+                t.FromUserId,
+                from.Email,
+                from.DisplayName,
+                t.ToUserId,
+                to.Email,
+                to.DisplayName,
+                t.AmountTry));
+        }
+
+        return list;
     }
 
     private static Dictionary<string, string[]> ValidateTravelName(string? name)
@@ -501,7 +648,25 @@ public sealed record SettlementTransferDto(
     string? ToDisplayName,
     decimal AmountTry);
 
-public sealed record TravelSettlementDto(TravelStatus Status, IReadOnlyList<SettlementTransferDto> Transfers);
+public sealed record SettlementMemberBalanceDto(
+    Guid UserId,
+    string Email,
+    string? DisplayName,
+    decimal PaidTry,
+    decimal ShareOwedTry,
+    decimal NetTry);
+
+public sealed record SettlementSummaryDto(
+    decimal TotalAmountTry,
+    int MemberCount,
+    decimal EqualShareTry,
+    IReadOnlyList<SettlementMemberBalanceDto> Members);
+
+public sealed record TravelSettlementDto(
+    TravelStatus Status,
+    IReadOnlyList<SettlementTransferDto> Transfers,
+    SettlementSummaryDto? Summary,
+    bool IsSettlementPreview);
 
 public sealed record TravelFinishDto(
     TravelStatus Status,

@@ -43,10 +43,10 @@
 
 ## Settlement engine
 
-- [ ] On **POST `/travels/{travelId}/finish`**: upsert `finished_acks` for current user.
-- [ ] When all members acked: set `all_finished` → run settlement (sync or job) → write `settlement_transfers` → `settled`, `settled_at`.
-- [ ] Implement §9 math: `equal_share`, per-member net, greedy debt minimization.
-- [ ] **GET `/travels/{travelId}/settlement`** — transfers (+ optional summary); behavior for `all_finished` vs `settled` as designed.
+- [x] On **POST `/travels/{travelId}/finish`**: upsert `finished_acks` for current user.
+- [x] When all members acked: set `all_finished` → run settlement (sync or job) → write `settlement_transfers` → `settled`, `settled_at`.
+- [x] Implement §9 math: `equal_share`, per-member net, greedy debt minimization.
+- [x] **GET `/travels/{travelId}/settlement`** — transfers (+ optional summary); behavior for `all_finished` vs `settled` as designed.
 
 ## Frontend (routes & behavior)
 

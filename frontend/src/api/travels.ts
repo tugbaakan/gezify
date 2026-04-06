@@ -40,9 +40,27 @@ export type SettlementTransferRow = {
   amountTry: number
 }
 
+export type SettlementMemberBalance = {
+  userId: string
+  email: string
+  displayName: string | null
+  paidTry: number
+  shareOwedTry: number
+  netTry: number
+}
+
+export type SettlementSummary = {
+  totalAmountTry: number
+  memberCount: number
+  equalShareTry: number
+  members: SettlementMemberBalance[]
+}
+
 export type SettlementResponse = {
   status: TravelStatus
   transfers: SettlementTransferRow[]
+  summary: SettlementSummary | null
+  isSettlementPreview: boolean
 }
 
 export function fetchTravelSettlement(travelId: string) {
