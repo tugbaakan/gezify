@@ -1,0 +1,14 @@
+.require-auth--center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  box-sizing: border-box;
+}
+
+.require-auth__message {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 0.9375rem;
+}

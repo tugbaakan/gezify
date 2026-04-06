@@ -8,7 +8,7 @@ import {
 import { fetchCurrentUser } from '../api/auth'
 import type { PublicUser } from '../api/types'
 import { AuthContext } from './context'
-import { startGoogleSignIn } from './google'
+import { startGoogleSignIn, type GoogleSignInOptions } from './google'
 import { clearAccessToken, getAccessToken, setAccessToken } from './token'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -49,8 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true)
   }, [])
 
-  const signInWithGoogle = useCallback(() => {
-    startGoogleSignIn()
+  const signInWithGoogle = useCallback((options?: GoogleSignInOptions) => {
+    startGoogleSignIn(options)
   }, [])
 
   const value = useMemo(

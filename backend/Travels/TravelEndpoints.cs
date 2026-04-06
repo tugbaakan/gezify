@@ -23,6 +23,7 @@ public static class TravelEndpoints
         group.MapPatch("/{travelId:guid}", PatchTravelAsync);
         group.MapGet("/{travelId:guid}/members", ListMembersAsync);
         group.MapPost("/{travelId:guid}/invitations", CreateInvitationAsync);
+        group.MapGet("/{travelId:guid}/settlement", GetSettlementAsync);
 
         return group;
     }
@@ -143,6 +144,42 @@ public static class TravelEndpoints
         await db.SaveChangesAsync(cancellationToken);
 
         return Results.Ok(new TravelDetailDto(travel.Id, travel.Name, travel.Status, travel.CreatedAt, travel.SettledAt, travel.CreatedById));
+    }
+
+    private static async Task<IResult> GetSettlementAsync(
+        Guid travelId,
+        HttpContext httpContext,
+        ApplicationDbContext db,
+        CancellationToken cancellationToken)
+    {
+        var userId = httpContext.User.TryGetUserId();
+        if (userId is null)
+            return Results.Json(ApiErrors.Unauthorized("Authentication required."), statusCode: StatusCodes.Status401Unauthorized);
+
+        var denied = await TravelAuthorization.RequireTravelMemberAsync(db, travelId, userId.Value, cancellationToken);
+        if (denied is not null)
+            return denied;
+
+        var travel = await db.Travels.AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == travelId, cancellationToken);
+        if (travel is null)
+            return Results.Json(ApiErrors.NotFound("Travel not found."), statusCode: StatusCodes.Status404NotFound);
+
+        var rows = await db.SettlementTransfers
+            .AsNoTracking()
+            .Where(s => s.TravelId == travelId)
+            .OrderBy(s => s.CreatedAt)
+            .Select(s => new SettlementTransferDto(
+                s.FromUserId,
+                s.FromUser!.Email,
+                s.FromUser.DisplayName,
+                s.ToUserId,
+                s.ToUser!.Email,
+                s.ToUser.DisplayName,
+                s.AmountTry))
+            .ToListAsync(cancellationToken);
+
+        return Results.Ok(new TravelSettlementDto(travel.Status, rows));
     }
 
     private static async Task<IResult> ListMembersAsync(
@@ -331,3 +368,14 @@ public sealed record InvitationCreatedDto(
     string Email,
     InvitationStatus Status,
     DateTimeOffset CreatedAt);
+
+public sealed record SettlementTransferDto(
+    Guid FromUserId,
+    string FromEmail,
+    string? FromDisplayName,
+    Guid ToUserId,
+    string ToEmail,
+    string? ToDisplayName,
+    decimal AmountTry);
+
+public sealed record TravelSettlementDto(TravelStatus Status, IReadOnlyList<SettlementTransferDto> Transfers);

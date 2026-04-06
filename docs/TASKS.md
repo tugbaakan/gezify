@@ -50,13 +50,13 @@
 
 ## Frontend (routes & behavior)
 
-- [ ] **`/`** — travel list (authenticated).
-- [ ] **`/travels/:id`** — detail + expenses.
-- [ ] **`/travels/:id/expenses/new`** — expense form (category, location, amount, currency, date/time).
-- [ ] Post-create **“Who paid?”** → PATCH payer.
-- [ ] **`/travels/:id/settlement`** — settlement UI when ready.
-- [ ] **`/invite/:token`** — accept flow; OAuth first if needed.
-- [ ] **`/auth/callback`** — Google redirect; token storage (memory / secure cookie).
+- [x] **`/`** — travel list (authenticated).
+- [x] **`/travels/:id`** — detail + expenses.
+- [x] **`/travels/:id/expenses/new`** — expense form (category, location, amount, currency, date/time).
+- [x] Post-create **“Who paid?”** → PATCH payer.
+- [x] **`/travels/:id/settlement`** — settlement UI when ready.
+- [x] **`/invite/:token`** — accept flow; OAuth first if needed.
+- [x] **`/auth/callback`** — Google redirect; token storage (memory / secure cookie).
 
 ## Ops & deployment (Railway)
 

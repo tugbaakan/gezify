@@ -1,11 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { acceptInvitation } from '../api/invitations'
 import { exchangeGoogleCodeOnce } from '../api/auth'
 import { ApiRequestError } from '../api/client'
 import { useAuth } from '../auth/useAuth'
 import { clearOAuthState, validateOAuthState } from '../auth/oauthState'
+import {
+  consumeOAuthReturnPath,
+  consumePendingInviteToken,
+} from '../auth/postLoginRedirect'
 import { getOAuthRedirectUri } from '../config'
 import './AuthCallbackPage.css'
+
+function safeReturnPath(path: string | null): string {
+  if (!path || !path.startsWith('/') || path.startsWith('//')) return '/'
+  return path
+}
 
 export function AuthCallbackPage() {
   const [searchParams] = useSearchParams()
@@ -45,7 +55,20 @@ export function AuthCallbackPage() {
       .then((res) => {
         clearOAuthState()
         completeSession(res.accessToken, res.user)
-        navigate('/', { replace: true })
+        const pendingInvite = consumePendingInviteToken()
+        if (pendingInvite) {
+          acceptInvitation(pendingInvite)
+            .then((r) => navigate(`/travels/${r.travelId}`, { replace: true }))
+            .catch(() => {
+              navigate(
+                `/invite/${encodeURIComponent(pendingInvite)}?oauth=accept_failed`,
+                { replace: true },
+              )
+            })
+          return
+        }
+        const returnPath = consumeOAuthReturnPath()
+        navigate(safeReturnPath(returnPath), { replace: true })
       })
       .catch((err: unknown) => {
         clearOAuthState()

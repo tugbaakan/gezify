@@ -1,3 +1,4 @@
+/** JWT for API calls; stored in sessionStorage (tab-scoped, cleared when the tab closes). */
 const ACCESS_TOKEN_KEY = 'gezify_access_token'
 
 export function getAccessToken(): string | null {
