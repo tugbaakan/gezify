@@ -32,4 +32,7 @@ public static class ApiErrors
 
     public static ApiErrorEnvelope ServerError(string message = "An unexpected error occurred.") =>
         new(new ApiErrorPayload(StatusCodes.Status500InternalServerError, "server_error", message));
+
+    public static ApiErrorEnvelope BadGateway(string message) =>
+        new(new ApiErrorPayload(StatusCodes.Status502BadGateway, "bad_gateway", message));
 }

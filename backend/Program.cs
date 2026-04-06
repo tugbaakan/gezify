@@ -1,8 +1,15 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Gezify.Api.Auth;
+using Gezify.Api.Auth.Options;
 using Gezify.Api.Data;
 using Gezify.Api.Data.Enums;
+using Gezify.Api.Expenses;
 using Gezify.Api.Infrastructure;
+using Gezify.Api.Invitations;
 using Gezify.Api.OpenApi;
+using Gezify.Api.Services;
+using Gezify.Api.Travels;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -11,6 +18,50 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddGezifyAuth();
 builder.Services.AddGezifyCors(builder.Configuration, builder.Environment);
 builder.Services.AddGezifySwagger();
+builder.Services.AddMemoryCache();
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+});
+
+builder.Services.Configure<InvitationOptions>(
+    builder.Configuration.GetSection(InvitationOptions.SectionName));
+builder.Services.Configure<SendGridOptions>(
+    builder.Configuration.GetSection(SendGridOptions.SectionName));
+builder.Services.Configure<ExchangeRateOptions>(
+    builder.Configuration.GetSection(ExchangeRateOptions.SectionName));
+
+// Railway-style env vars (single underscore) are not bound to nested sections by default; merge them here.
+var configuration = builder.Configuration;
+builder.Services.PostConfigure<InvitationOptions>(opts =>
+{
+    if (string.IsNullOrWhiteSpace(opts.BaseUrl))
+        opts.BaseUrl = configuration["INVITATION_BASE_URL"] ?? string.Empty;
+    if (string.IsNullOrWhiteSpace(opts.SigningKey))
+        opts.SigningKey = configuration["INVITATION_SIGNING_KEY"] ?? string.Empty;
+});
+builder.Services.PostConfigure<SendGridOptions>(opts =>
+{
+    if (string.IsNullOrWhiteSpace(opts.ApiKey))
+        opts.ApiKey = configuration["SENDGRID_API_KEY"] ?? string.Empty;
+});
+builder.Services.PostConfigure<ExchangeRateOptions>(opts =>
+{
+    if (string.IsNullOrWhiteSpace(opts.ApiKey))
+        opts.ApiKey = configuration["EXCHANGE_RATE_API_KEY"] ?? string.Empty;
+});
+
+// Domain config: also Invitation:BaseUrl, Invitation:SigningKey, SendGrid:*, ExchangeRate:ApiKey (see appsettings).
+
+builder.Services.AddSingleton<IInvitationTokenService, InvitationTokenService>();
+builder.Services.AddSingleton<IInvitationEmailSender, SendGridInvitationEmailSender>();
+builder.Services.AddSingleton<IExchangeRateService, ExchangeRateService>();
+
+builder.Services.AddHttpClient(ExchangeRateService.HttpClientName, client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 var connectionString = DatabaseConnection.Resolve(builder.Configuration, builder.Environment);
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
@@ -60,5 +111,8 @@ if (!app.Environment.IsProduction())
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
 app.MapAuthEndpoints();
+app.MapTravelEndpoints();
+app.MapInvitationEndpoints();
+app.MapExpenseEndpoints();
 
 app.Run();

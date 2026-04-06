@@ -28,13 +28,13 @@
 
 ## Backend — domain APIs (travel-scoped auth: must be `travel_member`)
 
-- [ ] **GET/POST `/travels`**, **GET/PATCH `/travels/{travelId}`** — create adds creator as first member, `status = active`.
-- [ ] **GET `/travels/{travelId}/members`**.
-- [ ] **POST `/travels/{travelId}/invitations`** — signed `token`, `pending`, SendGrid email with `INVITATION_BASE_URL`/invite link.
-- [ ] **POST `/invitations/accept`** — validate signature, expiry, email match, add member, set `accepted`.
-- [ ] Optional: **GET `/invitations/validate?token=...`** for pre-OAuth check.
-- [ ] **GET/POST `/travels/{travelId}/expenses`** — FX at save; store `amount_try`, `exchange_rate`, `added_by`.
-- [ ] **GET `/expenses/{expenseId}`**, **PATCH `/expenses/{expenseId}/payer`** — set `paid_by`.
+- [x] **GET/POST `/travels`**, **GET/PATCH `/travels/{travelId}`** — create adds creator as first member, `status = active`.
+- [x] **GET `/travels/{travelId}/members`**.
+- [x] **POST `/travels/{travelId}/invitations`** — signed `token`, `pending`, SendGrid email with `INVITATION_BASE_URL`/invite link.
+- [x] **POST `/invitations/accept`** — validate signature, expiry, email match, add member, set `accepted`.
+- [x] Optional: **GET `/invitations/validate?token=...`** for pre-OAuth check.
+- [x] **GET/POST `/travels/{travelId}/expenses`** — FX at save; store `amount_try`, `exchange_rate`, `added_by`.
+- [x] **GET `/expenses/{expenseId}`**, **PATCH `/expenses/{expenseId}/payer`** — set `paid_by`.
 
 ## Services (backend)
 

@@ -94,12 +94,11 @@ public static class AuthEndpoints
         ApplicationDbContext db,
         CancellationToken cancellationToken)
     {
-        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier)
-                  ?? principal.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub);
-        if (sub is null || !Guid.TryParse(sub, out var userId))
+        var userId = principal.TryGetUserId();
+        if (userId is null)
             return Results.Json(ApiErrors.Unauthorized("Invalid token subject."), statusCode: StatusCodes.Status401Unauthorized);
 
-        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value, cancellationToken);
         if (user is null)
             return Results.Json(ApiErrors.NotFound("User not found."), statusCode: StatusCodes.Status404NotFound);
 
