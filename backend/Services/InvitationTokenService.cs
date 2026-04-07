@@ -46,7 +46,10 @@ public sealed class InvitationTokenService(IOptions<InvitationOptions> options) 
         if (string.IsNullOrWhiteSpace(token) || _options.SigningKey.Length < 32)
             return null;
 
-        var handler = new JwtSecurityTokenHandler();
+        // Keep JWT short claim types (sub, email, tid). Default handler maps them to ClaimTypes.*
+        // and breaks our invitation parsing unless we duplicate every possible mapped type.
+        var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
+        handler.InboundClaimTypeMap.Clear();
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
         try
         {

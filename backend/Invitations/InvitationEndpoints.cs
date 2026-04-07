@@ -84,12 +84,6 @@ public static class InvitationEndpoints
             return Results.Json(ApiErrors.Validation(err), statusCode: StatusCodes.Status422UnprocessableEntity);
         }
 
-        if (!string.Equals(invitation.Token, body.Token.Trim(), StringComparison.Ordinal))
-        {
-            var err = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase) { ["token"] = ["The invitation token is invalid."] };
-            return Results.Json(ApiErrors.Validation(err), statusCode: StatusCodes.Status422UnprocessableEntity);
-        }
-
         var alreadyMember = await db.TravelMembers.AnyAsync(
             m => m.TravelId == invitation.TravelId && m.UserId == userId.Value,
             cancellationToken);
@@ -122,23 +116,45 @@ public static class InvitationEndpoints
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(token))
+        {
             return Results.Ok(new InvitationValidationDto(false, null));
+        }
 
-        var principal = invitationTokens.ValidateToken(token.Trim(), DateTimeOffset.UtcNow);
-        if (principal is null || !TryParseInvitationClaims(principal, out var invitationId, out _, out _))
+        var trimmed = token.Trim();
+        var principal = invitationTokens.ValidateToken(trimmed, DateTimeOffset.UtcNow);
+        if (principal is null)
+        {
             return Results.Ok(new InvitationValidationDto(false, null));
+        }
+
+        if (!TryParseInvitationClaims(principal, out var invitationId, out var travelId, out _))
+        {
+            return Results.Ok(new InvitationValidationDto(false, null));
+        }
 
         var invitation = await db.Invitations.AsNoTracking()
             .Include(i => i.Travel)
             .FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken);
 
-        if (invitation is null || invitation.Status != InvitationStatus.Pending)
+        if (invitation is null)
+        {
             return Results.Ok(new InvitationValidationDto(false, null));
+        }
 
-        if (!string.Equals(invitation.Token, token.Trim(), StringComparison.Ordinal))
+        if (invitation.Status != InvitationStatus.Pending)
+        {
             return Results.Ok(new InvitationValidationDto(false, null));
+        }
 
         return Results.Ok(new InvitationValidationDto(true, invitation.Travel?.Name));
+    }
+
+    /// <summary>Expected JWT has 3 dot-separated segments; helps spot truncation without logging the token.</summary>
+    private static int CountJwtParts(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return 0;
+        return value.Count(c => c == '.') + 1;
     }
 
     private static bool TryParseInvitationClaims(
@@ -151,7 +167,9 @@ public static class InvitationEndpoints
         travelId = default;
         email = string.Empty;
 
-        var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        // JwtSecurityTokenHandler maps inbound JWT claims to ClaimTypes.*; accept both shapes.
+        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier)
+                  ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
         if (sub is null || !Guid.TryParse(sub, out invitationId))
             return false;
 
@@ -159,7 +177,9 @@ public static class InvitationEndpoints
         if (tid is null || !Guid.TryParse(tid, out travelId))
             return false;
 
-        email = principal.FindFirstValue(JwtRegisteredClaimNames.Email) ?? string.Empty;
+        email = principal.FindFirstValue(ClaimTypes.Email)
+                ?? principal.FindFirstValue(JwtRegisteredClaimNames.Email)
+                ?? string.Empty;
         if (string.IsNullOrWhiteSpace(email))
             return false;
 
