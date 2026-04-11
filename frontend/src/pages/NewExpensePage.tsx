@@ -293,36 +293,38 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
               className="new-expense__form new-expense__form--sheet"
               onSubmit={onPayerSubmit}
             >
-              <h1 id={payerTitleId} className="new-expense__title new-expense__title--sheet">
-                Who paid?
-              </h1>
-              <p className="new-expense__hint">
-                Choose who covered this expense so the split stays fair.
-              </p>
-
-              <fieldset className="new-expense__fieldset new-expense__fieldset--payer">
-                <legend className="new-expense__legend">Payer</legend>
-                {members?.map((m) => (
-                  <label key={m.userId} className="new-expense__payer-option">
-                    <input
-                      type="radio"
-                      name="payer"
-                      value={m.userId}
-                      checked={payerId === m.userId}
-                      onChange={() => setPayerId(m.userId)}
-                    />
-                    <span className="new-expense__payer-option-label">
-                      {m.displayName?.trim() || m.email}
-                    </span>
-                  </label>
-                ))}
-              </fieldset>
-
-              {submitError ? (
-                <p className="new-expense__error" role="alert">
-                  {submitError}
+              <div className="new-expense__sheet-scroll">
+                <h1 id={payerTitleId} className="new-expense__title new-expense__title--sheet">
+                  Who paid?
+                </h1>
+                <p className="new-expense__hint">
+                  Choose who covered this expense so the split stays fair.
                 </p>
-              ) : null}
+
+                <fieldset className="new-expense__fieldset new-expense__fieldset--payer">
+                  <legend className="new-expense__legend">Payer</legend>
+                  {members?.map((m) => (
+                    <label key={m.userId} className="new-expense__payer-option">
+                      <input
+                        type="radio"
+                        name="payer"
+                        value={m.userId}
+                        checked={payerId === m.userId}
+                        onChange={() => setPayerId(m.userId)}
+                      />
+                      <span className="new-expense__payer-option-label">
+                        {m.displayName?.trim() || m.email}
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+
+                {submitError ? (
+                  <p className="new-expense__error" role="alert">
+                    {submitError}
+                  </p>
+                ) : null}
+              </div>
 
               <div className="new-expense__actions new-expense__actions--sheet">
                 <button

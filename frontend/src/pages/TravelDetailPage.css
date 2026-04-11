@@ -21,11 +21,15 @@
 
 .travel-detail__crumb a {
   color: var(--accent-text);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent-text) 35%, transparent);
+  text-underline-offset: 0.15em;
 }
 
-.travel-detail__crumb a:hover {
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .travel-detail__crumb a:hover {
+    text-decoration-color: var(--accent-text);
+  }
 }
 
 .travel-detail__crumb-current {
@@ -151,6 +155,11 @@
   text-align: center;
   cursor: pointer;
   border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  box-sizing: border-box;
 }
 
 .travel-detail__btn--primary {
@@ -159,20 +168,39 @@
   border-color: var(--accent);
 }
 
-.travel-detail__btn--primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+@media (hover: hover) and (pointer: fine) {
+  .travel-detail__btn--primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .travel-detail__btn--secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
 }
 
 .travel-detail__btn--secondary {
   background: transparent;
   color: var(--text-h);
-  border-color: var(--border);
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
 }
 
-.travel-detail__btn--secondary:hover {
-  border-color: var(--accent);
-  color: var(--accent-text);
+@media (max-width: 519px) {
+  .travel-detail__actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .travel-detail__btn {
+    width: 100%;
+    min-height: 3rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+  }
 }
 
 .travel-detail__section {
