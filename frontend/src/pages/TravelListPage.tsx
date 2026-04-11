@@ -5,6 +5,8 @@ import {
   useState,
   type CSSProperties,
 } from 'react'
+import { useTranslation } from 'react-i18next'
+import { i18n } from '../i18n'
 import { Link } from 'react-router-dom'
 import { createTravel, fetchTravels } from '../api/travels'
 import type { TravelListItem } from '../api/types'
@@ -21,6 +23,7 @@ import {
 import './TravelListPage.css'
 
 export function TravelListPage() {
+  const { t } = useTranslation()
   const { user, ready, signInWithGoogle } = useAuth()
   const [travels, setTravels] = useState<TravelListItem[] | null>(null)
   const [listLoading, setListLoading] = useState(false)
@@ -39,19 +42,22 @@ export function TravelListPage() {
       })
       .catch((e: unknown) => {
         if (e instanceof ApiRequestError) setListError(e)
-        else setListError('Geziler yüklenemedi.')
+        else setListError(i18n.t('travelList.loadFailed'))
       })
       .finally(() => setListLoading(false))
   }, [user])
 
   useLayoutEffect(() => {
     if (!ready || !user) return
+    /* Show loading immediately when auth becomes ready to avoid list flash */
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync with auth readiness before paint
     setListLoading(true)
   }, [ready, user])
 
   useEffect(() => {
     if (!ready) return
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset list when signed out
       setListLoading(false)
       setTravels(null)
       setListError(null)
@@ -73,7 +79,7 @@ export function TravelListPage() {
       })
       .catch((err: unknown) => {
         if (err instanceof ApiRequestError) setCreateError(err)
-        else setCreateError('Gezi oluşturulamadı.')
+        else setCreateError(i18n.t('travelList.createFailed'))
       })
       .finally(() => setCreating(false))
   }
@@ -82,36 +88,31 @@ export function TravelListPage() {
     <AppLayout>
       <main className="travel-list__main">
         {!ready ? (
-          <p className="travel-list__loading">Loading…</p>
+          <p className="travel-list__loading">{t('common.loading')}</p>
         ) : !user ? (
           <>
             <section className="travel-list__hero" aria-labelledby="hero-heading">
               <h1 id="hero-heading" className="travel-list__title">
-                Split trip costs without the spreadsheet drama.
+                {t('travelList.heroTitle')}
               </h1>
-              <p className="travel-list__lede">
-                Track shared expenses in TRY, invite your crew, and settle up when
-                the trip wraps — all in one place.
-              </p>
+              <p className="travel-list__lede">{t('travelList.heroLede')}</p>
             </section>
             <section
               className="travel-list__panel"
               aria-labelledby="travels-heading"
             >
               <h2 id="travels-heading" className="travel-list__section-title">
-                Your travels
+                {t('travelList.yourTravels')}
               </h2>
               <div className="travel-list__empty" role="status">
-                <p className="travel-list__empty-title">Sign in to continue</p>
-                <p className="travel-list__empty-copy">
-                  Create a trip, add expenses, and see balances when you finish.
-                </p>
+                <p className="travel-list__empty-title">{t('travelList.signInTitle')}</p>
+                <p className="travel-list__empty-copy">{t('travelList.signInCopy')}</p>
                 <button
                   type="button"
                   className="travel-list__primary"
                   onClick={() => signInWithGoogle()}
                 >
-                  Sign in with Google
+                  {t('app.signInGoogle')}
                 </button>
               </div>
             </section>
@@ -124,13 +125,13 @@ export function TravelListPage() {
             >
               <div className="travel-list__panel-head">
                 <h2 id="travels-heading" className="travel-list__section-title">
-                  Your travels
+                  {t('travelList.yourTravels')}
                 </h2>
               </div>
 
               <form className="travel-list__create" onSubmit={onCreateTravel}>
                 <label className="travel-list__label" htmlFor="new-travel-name">
-                  New trip
+                  {t('travelList.newTrip')}
                 </label>
                 <div className="travel-list__create-row">
                   <input
@@ -138,7 +139,7 @@ export function TravelListPage() {
                     className="travel-list__input"
                     value={newName}
                     onChange={(ev) => setNewName(ev.target.value)}
-                    placeholder="e.g. Cappadocia weekend"
+                    placeholder={t('travelList.tripPlaceholder')}
                     maxLength={512}
                     autoComplete="off"
                   />
@@ -147,7 +148,7 @@ export function TravelListPage() {
                     className="travel-list__primary"
                     disabled={creating || !newName.trim()}
                   >
-                    {creating ? 'Creating…' : 'Create'}
+                    {creating ? t('common.creating') : t('travelList.create')}
                   </button>
                 </div>
                 {createError ? (
@@ -163,25 +164,23 @@ export function TravelListPage() {
                 <TravelListSkeleton />
               ) : !listError && travels !== null && travels.length === 0 ? (
                 <div className="travel-list__empty" role="status">
-                  <p className="travel-list__empty-title">Henüz gezi yok</p>
-                  <p className="travel-list__empty-copy">
-                    Yukarıdan yeni bir gezi oluşturarak ortak giderleri takip etmeye başla.
-                  </p>
+                  <p className="travel-list__empty-title">{t('travelList.emptyTitle')}</p>
+                  <p className="travel-list__empty-copy">{t('travelList.emptyCopy')}</p>
                 </div>
               ) : !listError && travels !== null && travels.length > 0 ? (
                 <ul className="travel-list__items motion-list">
-                  {travels.map((t, i) => (
+                  {travels.map((tr, i) => (
                     <li
-                      key={t.id}
+                      key={tr.id}
                       style={{ ['--stagger' as string]: String(i) } as CSSProperties}
                     >
-                      <Link className="travel-list__link" to={`/travels/${t.id}`}>
-                        <span className="travel-list__link-name">{t.name}</span>
+                      <Link className="travel-list__link" to={`/travels/${tr.id}`}>
+                        <span className="travel-list__link-name">{tr.name}</span>
                         <span
-                          className={`travel-list__status-chip travel-list__status-chip--${travelStatusChipTone(t.status)}`}
-                          aria-label={travelStatusLabel(t.status)}
+                          className={`travel-list__status-chip travel-list__status-chip--${travelStatusChipTone(tr.status)}`}
+                          aria-label={travelStatusLabel(tr.status)}
                         >
-                          {travelStatusShort(t.status)}
+                          {travelStatusShort(tr.status)}
                         </span>
                       </Link>
                     </li>

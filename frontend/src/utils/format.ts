@@ -1,7 +1,8 @@
 import type { ExpenseCategory, TravelStatus } from '../api/types'
+import { i18n } from '../i18n'
 
 export function formatTry(amount: number): string {
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat(i18n.language || undefined, {
     style: 'currency',
     currency: 'TRY',
     minimumFractionDigits: 2,
@@ -10,33 +11,22 @@ export function formatTry(amount: number): string {
 }
 
 export function formatExpenseCategory(cat: string): string {
-  const map: Record<string, string> = {
-    food: 'Food',
-    accommodation: 'Accommodation',
-    transfer: 'Transfer',
-    souvenir: 'Souvenir',
-    activity: 'Activity',
-  }
-  return map[cat] ?? cat
+  const key = `expenseCategory.${cat}`
+  const translated = i18n.t(key)
+  return translated !== key ? translated : cat
 }
 
 export function travelStatusLabel(status: string): string {
-  const map: Record<string, string> = {
-    active: 'Active',
-    allFinished: 'Everyone finished',
-    settled: 'Settled',
-  }
-  return map[status] ?? status
+  const key = `travelStatus.long.${status}`
+  const translated = i18n.t(key)
+  return translated !== key ? translated : status
 }
 
 /** Short label for status chips (travel list, detail bar). */
 export function travelStatusShort(status: TravelStatus): string {
-  const map: Record<TravelStatus, string> = {
-    active: 'Active',
-    allFinished: 'Settling',
-    settled: 'Done',
-  }
-  return map[status] ?? status
+  const key = `travelStatus.short.${status}`
+  const translated = i18n.t(key)
+  return translated !== key ? translated : status
 }
 
 export type TravelStatusChipTone = 'active' | 'settling' | 'done'
@@ -60,10 +50,7 @@ export function expenseCategoriesForFilter(): ExpenseCategory[] {
 }
 
 export function invitationStatusLabel(status: string): string {
-  const map: Record<string, string> = {
-    pending: 'Pending',
-    accepted: 'Accepted',
-    expired: 'Expired',
-  }
-  return map[status] ?? status
+  const key = `invitationStatus.${status}`
+  const translated = i18n.t(key)
+  return translated !== key ? translated : status
 }

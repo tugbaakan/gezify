@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
+import { i18n } from '../i18n'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { acceptInvitation, validateInvitationToken } from '../api/invitations'
 import { ApiRequestError } from '../api/client'
@@ -7,6 +9,7 @@ import { useAuth } from '../auth/useAuth'
 import './InvitePage.css'
 
 function InviteWithToken({ token }: { token: string }) {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { user, ready, signInWithGoogle } = useAuth()
@@ -55,7 +58,7 @@ function InviteWithToken({ token }: { token: string }) {
       .then((res) => navigate(`/travels/${res.travelId}`, { replace: true }))
       .catch((e: unknown) => {
         if (e instanceof ApiRequestError) setAcceptError(e.message)
-        else setAcceptError('Could not accept invitation.')
+        else setAcceptError(i18n.t('invite.acceptFailed'))
       })
       .finally(() => setAccepting(false))
   }
@@ -63,47 +66,45 @@ function InviteWithToken({ token }: { token: string }) {
   return (
     <main className="invite__main">
       <div className="invite__card">
-        <h1 className="invite__title">Trip invitation</h1>
+        <h1 className="invite__title">{t('invite.title')}</h1>
 
         {oauthFailed ? (
           <p className="invite__warn" role="alert">
-            We could not add you to the trip after sign-in. Your Google account email may
-            not match the invitation. Open the invite link again while signed in with the
-            invited address, or ask the host to send a new invite.
+            {t('invite.oauthFailed')}
           </p>
         ) : null}
 
         {checking ? (
-          <p className="invite__muted">Checking invitation…</p>
+          <p className="invite__muted">{t('common.checking')}</p>
         ) : !inviteOk ? (
           <p className="invite__error" role="alert">
-            This invitation link is invalid or has expired.
+            {t('invite.invalid')}
           </p>
         ) : (
           <>
             <p className="invite__lede">
               {travelName ? (
-                <>
-                  You&apos;re invited to <strong>{travelName}</strong>.
-                </>
+                <Trans
+                  i18nKey="invite.invitedToNamed"
+                  values={{ name: travelName }}
+                  components={{ highlight: <strong /> }}
+                />
               ) : (
-                <>You&apos;ve been invited to a trip on Gezify.</>
+                t('invite.invitedGeneric')
               )}
             </p>
 
             {!ready ? (
-              <p className="invite__muted">Loading…</p>
+              <p className="invite__muted">{t('common.loading')}</p>
             ) : !user ? (
               <div className="invite__actions">
-                <p className="invite__hint">
-                  Sign in with the Google account that received the invitation email.
-                </p>
+                <p className="invite__hint">{t('invite.signInHint')}</p>
                 <button
                   type="button"
                   className="invite__primary"
                   onClick={() => signInWithGoogle({ pendingInviteToken: token })}
                 >
-                  Sign in with Google
+                  {t('app.signInGoogle')}
                 </button>
               </div>
             ) : (
@@ -119,13 +120,13 @@ function InviteWithToken({ token }: { token: string }) {
                   disabled={accepting}
                   onClick={onAccept}
                 >
-                  {accepting ? 'Joining…' : 'Join this trip'}
+                  {accepting ? t('common.joining') : t('invite.joinTrip')}
                 </button>
               </div>
             )}
 
             <p className="invite__back">
-              <Link to="/">Back to Gezify</Link>
+              <Link to="/">{t('invite.backHome')}</Link>
             </p>
           </>
         )}
@@ -135,6 +136,7 @@ function InviteWithToken({ token }: { token: string }) {
 }
 
 export function InvitePage() {
+  const { t } = useTranslation()
   const { token: tokenParam } = useParams<{ token: string }>()
   const token = tokenParam ? decodeURIComponent(tokenParam) : ''
 
@@ -143,12 +145,12 @@ export function InvitePage() {
       {!token ? (
         <main className="invite__main">
           <div className="invite__card">
-            <h1 className="invite__title">Trip invitation</h1>
+            <h1 className="invite__title">{t('invite.title')}</h1>
             <p className="invite__error" role="alert">
-              This invitation link is invalid or has expired.
+              {t('invite.invalid')}
             </p>
             <p className="invite__back">
-              <Link to="/">Back to Gezify</Link>
+              <Link to="/">{t('invite.backHome')}</Link>
             </p>
           </div>
         </main>

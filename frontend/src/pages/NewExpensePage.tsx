@@ -1,4 +1,6 @@
 import { useEffect, useId, useMemo, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
+import { i18n } from '../i18n'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { createExpense, patchExpensePayer } from '../api/expenses'
 import { fetchTravelMembers } from '../api/travels'
@@ -10,12 +12,12 @@ import { ExpenseFormSkeleton } from '../components/ExpenseFormSkeleton'
 import { useAuth } from '../auth/useAuth'
 import './NewExpensePage.css'
 
-const CATEGORIES: { value: ExpenseCategory; label: string }[] = [
-  { value: 'food', label: 'Food' },
-  { value: 'accommodation', label: 'Accommodation' },
-  { value: 'transfer', label: 'Transfer' },
-  { value: 'souvenir', label: 'Souvenir' },
-  { value: 'activity', label: 'Activity' },
+const CATEGORY_VALUES: ExpenseCategory[] = [
+  'food',
+  'accommodation',
+  'transfer',
+  'souvenir',
+  'activity',
 ]
 
 const PRESET_CURRENCIES = ['TRY', 'EUR', 'USD', 'GBP'] as const
@@ -32,10 +34,20 @@ function defaultDatetimeLocal(): string {
 }
 
 function NewExpenseContent({ travelId }: { travelId: string }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { user } = useAuth()
   const payerTitleId = useId()
   const currencyFieldId = useId()
+
+  const categories = useMemo(
+    () =>
+      CATEGORY_VALUES.map((value) => ({
+        value,
+        label: t(`expenseCategory.${value}`),
+      })),
+    [t],
+  )
 
   const [members, setMembers] = useState<TravelMember[] | null>(null)
   const [loadError, setLoadError] = useState<ApiRequestError | string | null>(null)
@@ -66,7 +78,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
       .catch((e: unknown) => {
         if (!cancelled) {
           if (e instanceof ApiRequestError) setLoadError(e)
-          else setLoadError('Üyeler yüklenemedi.')
+          else setLoadError(i18n.t('newExpense.membersLoadFailed'))
         }
       })
 
@@ -104,7 +116,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
     e.preventDefault()
     const code = currency.trim().toUpperCase()
     if (!code || code.length !== 3) {
-      setSubmitError('Choose a currency or enter a 3-letter ISO code.')
+      setSubmitError(t('newExpense.currencyInvalid'))
       return
     }
     if (submitting || !Number.isFinite(amountNum) || amountNum <= 0) return
@@ -130,7 +142,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
       })
       .catch((err: unknown) => {
         if (err instanceof ApiRequestError) setSubmitError(err)
-        else setSubmitError('Gider kaydedilemedi.')
+        else setSubmitError(t('newExpense.saveFailed'))
       })
       .finally(() => setSubmitting(false))
   }
@@ -144,7 +156,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
       .then(() => navigate(`/travels/${travelId}`, { replace: true }))
       .catch((err: unknown) => {
         if (err instanceof ApiRequestError) setSubmitError(err)
-        else setSubmitError('Ödeyen kaydedilemedi.')
+        else setSubmitError(t('newExpense.payerFailed'))
       })
       .finally(() => setSubmitting(false))
   }
@@ -152,11 +164,11 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
   return (
     <main className="new-expense__main">
       <nav className="new-expense__crumb" aria-label="Breadcrumb">
-        <Link to="/">Travels</Link>
+        <Link to="/">{t('newExpense.breadcrumbTrips')}</Link>
         <span aria-hidden="true"> / </span>
-        <Link to={`/travels/${travelId}`}>Trip</Link>
+        <Link to={`/travels/${travelId}`}>{t('newExpense.trip')}</Link>
         <span aria-hidden="true"> / </span>
-        <span>New expense</span>
+        <span>{t('newExpense.newExpense')}</span>
       </nav>
 
       {loadError ? <ApiErrorBanner className="new-expense__banner" error={loadError} /> : null}
@@ -165,16 +177,16 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
         <ExpenseFormSkeleton />
       ) : !createdExpense ? (
         <form className="new-expense__form" onSubmit={onCreateSubmit}>
-          <h1 className="new-expense__title">New expense</h1>
+          <h1 className="new-expense__title">{t('newExpense.newExpense')}</h1>
 
           <label className="new-expense__field">
-            <span className="new-expense__label">Category</span>
+            <span className="new-expense__label">{t('newExpense.category')}</span>
             <select
               className="new-expense__input"
               value={category}
               onChange={(ev) => setCategory(ev.target.value as ExpenseCategory)}
             >
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.label}
                 </option>
@@ -183,19 +195,19 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
           </label>
 
           <label className="new-expense__field">
-            <span className="new-expense__label">Location (optional)</span>
+            <span className="new-expense__label">{t('newExpense.locationOptional')}</span>
             <input
               className="new-expense__input"
               value={location}
               onChange={(ev) => setLocation(ev.target.value)}
               maxLength={1024}
-              placeholder="Place or note"
+              placeholder={t('newExpense.locationPlaceholder')}
             />
           </label>
 
           <div className="new-expense__row new-expense__row--amount-block">
             <label className="new-expense__field new-expense__field--grow">
-              <span className="new-expense__label">Amount</span>
+              <span className="new-expense__label">{t('newExpense.amount')}</span>
               <input
                 className="new-expense__input new-expense__input--amount"
                 inputMode="decimal"
@@ -208,7 +220,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
             </label>
             <div className="new-expense__field new-expense__field--currency-block">
               <span className="new-expense__label" id={currencyFieldId}>
-                Currency
+                {t('newExpense.currency')}
               </span>
               <select
                 className="new-expense__input new-expense__select"
@@ -225,7 +237,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
                     {c}
                   </option>
                 ))}
-                <option value="OTHER">Other…</option>
+                <option value="OTHER">{t('newExpense.currencyOther')}</option>
               </select>
               {!isPresetCurrency(currency) ? (
                 <input
@@ -236,20 +248,18 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
                       ev.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3),
                     )
                   }
-                  placeholder="e.g. CHF"
+                  placeholder={t('newExpense.currencyCodePlaceholder')}
                   maxLength={3}
-                  aria-label="ISO 4217 currency code"
+                  aria-label={t('newExpense.currencyCodeAria')}
                 />
               ) : null}
             </div>
           </div>
 
-          <p className="new-expense__fx-hint">
-            The TRY equivalent is locked when you save, using the exchange rate at that moment.
-          </p>
+          <p className="new-expense__fx-hint">{t('newExpense.fxHint')}</p>
 
           <label className="new-expense__field">
-            <span className="new-expense__label">Date & time</span>
+            <span className="new-expense__label">{t('newExpense.dateTime')}</span>
             <input
               className="new-expense__input"
               type="datetime-local"
@@ -265,14 +275,14 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
 
           <div className="new-expense__actions">
             <Link className="new-expense__cancel" to={`/travels/${travelId}`}>
-              Cancel
+              {t('common.cancel')}
             </Link>
             <button
               type="submit"
               className="new-expense__submit"
               disabled={submitting || members === null}
             >
-              {submitting ? 'Saving…' : 'Save expense'}
+              {submitting ? t('common.saving') : t('newExpense.saveExpense')}
             </button>
           </div>
         </form>
@@ -293,14 +303,12 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
             >
               <div className="new-expense__sheet-scroll">
                 <h1 id={payerTitleId} className="new-expense__title new-expense__title--sheet">
-                  Who paid?
+                  {t('newExpense.whoPaid')}
                 </h1>
-                <p className="new-expense__hint">
-                  Choose who covered this expense so the split stays fair.
-                </p>
+                <p className="new-expense__hint">{t('newExpense.whoPaidHint')}</p>
 
                 <fieldset className="new-expense__fieldset new-expense__fieldset--payer">
-                  <legend className="new-expense__legend">Payer</legend>
+                  <legend className="new-expense__legend">{t('newExpense.payerLegend')}</legend>
                   {members?.map((m) => (
                     <label key={m.userId} className="new-expense__payer-option">
                       <input
@@ -329,14 +337,14 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
                   disabled={submitting}
                   onClick={() => setCreatedExpense(null)}
                 >
-                  Back
+                  {t('common.back')}
                 </button>
                 <button
                   type="submit"
                   className="new-expense__submit"
                   disabled={submitting || !payerId}
                 >
-                  {submitting ? 'Saving…' : 'Continue'}
+                  {submitting ? t('common.saving') : t('common.continue')}
                 </button>
               </div>
             </form>
@@ -348,13 +356,14 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
 }
 
 export function NewExpensePage() {
+  const { t } = useTranslation()
   const { id: travelId } = useParams<{ id: string }>()
 
   return (
     <AppLayout>
       {!travelId ? (
         <main className="new-expense__main">
-          <ApiErrorBanner error="Gezi kimliği eksik." />
+          <ApiErrorBanner error={t('newExpense.missingId')} />
         </main>
       ) : (
         <NewExpenseContent key={travelId} travelId={travelId} />

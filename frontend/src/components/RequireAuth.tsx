@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { AppLayout } from './AppLayout'
 import './RequireAuth.css'
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation()
   const { user, ready } = useAuth()
   const location = useLocation()
 
@@ -11,7 +13,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     return (
       <AppLayout>
         <main className="require-auth require-auth--center">
-          <p className="require-auth__message">Loading…</p>
+          <p className="require-auth__message">{t('requireAuth.loading')}</p>
         </main>
       </AppLayout>
     )

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ApiRequestError } from '../api/client'
 import { apiErrorToBannerContent } from '../utils/apiErrorDisplay'
 import './ApiErrorBanner.css'
@@ -9,12 +10,13 @@ type Props = {
 }
 
 export function ApiErrorBanner({ error, className }: Props) {
+  const { t } = useTranslation()
   if (error == null || error === '') return null
 
   const content =
     typeof error === 'string'
       ? { variant: 'danger' as const, title: error, body: undefined, status: -1 }
-      : apiErrorToBannerContent(error)
+      : apiErrorToBannerContent(error, t)
 
   return (
     <div

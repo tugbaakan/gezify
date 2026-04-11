@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { i18n } from '../i18n'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { acceptInvitation } from '../api/invitations'
 import { exchangeGoogleCodeOnce } from '../api/auth'
@@ -18,6 +20,7 @@ function safeReturnPath(path: string | null): string {
 }
 
 export function AuthCallbackPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { completeSession } = useAuth()
@@ -32,14 +35,13 @@ export function AuthCallbackPage() {
     if (oauthError) {
       return (
         oauthDescription?.replace(/\+/g, ' ') ??
-        `Google sign-in was cancelled (${oauthError}).`
+        t('authCallback.oauthCancelled', { error: oauthError })
       )
     }
-    if (!code) return 'Missing authorization code. Try signing in again.'
-    if (!validateOAuthState(state))
-      return 'Invalid sign-in session. Please try again from the app.'
+    if (!code) return t('authCallback.missingCode')
+    if (!validateOAuthState(state)) return t('authCallback.invalidSession')
     return null
-  }, [oauthError, oauthDescription, code, state])
+  }, [oauthError, oauthDescription, code, state, t])
 
   useEffect(() => {
     if (!blockedMessage) return
@@ -73,23 +75,20 @@ export function AuthCallbackPage() {
       .catch((err: unknown) => {
         clearOAuthState()
         if (err instanceof ApiRequestError)
-          setExchangeError(err.message || 'Sign-in failed.')
-        else
-          setExchangeError(
-            'Could not reach the server. Check VITE_API_URL and try again.',
-          )
+          setExchangeError(err.message || i18n.t('authCallback.signInFailed'))
+        else setExchangeError(i18n.t('authCallback.serverUnreachable'))
       })
   }, [blockedMessage, code, navigate, completeSession])
 
   const message =
-    blockedMessage ?? exchangeError ?? 'Signing you in…'
+    blockedMessage ?? exchangeError ?? t('common.signingIn')
 
   return (
     <div className="auth-callback">
       <div className="auth-callback__card">
         <p className="auth-callback__message">{message}</p>
         <Link className="auth-callback__link" to="/">
-          Back to Gezify
+          {t('authCallback.backHome')}
         </Link>
       </div>
     </div>

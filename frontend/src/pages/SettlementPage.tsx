@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
+import { i18n } from '../i18n'
 import { Link, useParams } from 'react-router-dom'
 import {
   fetchTravel,
@@ -18,6 +20,7 @@ function personLabel(email: string, displayName: string | null) {
 }
 
 function SettlementContent({ travelId }: { travelId: string }) {
+  const { t } = useTranslation()
   const [travel, setTravel] = useState<TravelDetail | null>(null)
   const [travelError, setTravelError] = useState<ApiRequestError | string | null>(null)
   const [settlement, setSettlement] = useState<SettlementResponse | null>(null)
@@ -30,16 +33,16 @@ function SettlementContent({ travelId }: { travelId: string }) {
     let cancelled = false
 
     fetchTravel(travelId)
-      .then((t) => {
+      .then((tr) => {
         if (!cancelled) {
           setTravelError(null)
-          setTravel(t)
+          setTravel(tr)
         }
       })
       .catch((e: unknown) => {
         if (!cancelled) {
           if (e instanceof ApiRequestError) setTravelError(e)
-          else setTravelError('Gezi yüklenemedi.')
+          else setTravelError(i18n.t('settlement.travelLoadFailed'))
         }
       })
 
@@ -53,7 +56,7 @@ function SettlementContent({ travelId }: { travelId: string }) {
       .catch((e: unknown) => {
         if (!cancelled) {
           if (e instanceof ApiRequestError) setSettlementError(e)
-          else setSettlementError('Ödeme özeti yüklenemedi.')
+          else setSettlementError(i18n.t('settlement.settlementLoadFailed'))
         }
       })
       .finally(() => {
@@ -94,11 +97,13 @@ function SettlementContent({ travelId }: { travelId: string }) {
   return (
     <main className="settlement__main">
       <nav className="settlement__crumb" aria-label="Breadcrumb">
-        <Link to="/">Travels</Link>
+        <Link to="/">{t('settlement.breadcrumbTrips')}</Link>
         <span aria-hidden="true"> / </span>
-        <Link to={`/travels/${travelId}`}>{travel?.name ?? 'Trip'}</Link>
+        <Link to={`/travels/${travelId}`}>
+          {travel?.name ?? t('settlement.tripFallback')}
+        </Link>
         <span aria-hidden="true"> / </span>
-        <span>Settlement</span>
+        <span>{t('settlement.settlement')}</span>
       </nav>
 
       {travelError ? (
@@ -108,7 +113,7 @@ function SettlementContent({ travelId }: { travelId: string }) {
       ) : (
         <>
           <header className="settlement__head">
-            <h1 className="settlement__title">Settlement</h1>
+            <h1 className="settlement__title">{t('settlement.title')}</h1>
             <p className="settlement__sub">
               {travel.name} · {travelStatusLabel(travel.status)}
             </p>
@@ -118,7 +123,7 @@ function SettlementContent({ travelId }: { travelId: string }) {
             <span
               className={`settlement__flow-step${travel ? ' settlement__flow-step--on' : ''}`}
             >
-              Trip
+              {t('settlement.flowTrip')}
             </span>
             <span className="settlement__flow-sep" aria-hidden="true">
               →
@@ -126,7 +131,7 @@ function SettlementContent({ travelId }: { travelId: string }) {
             <span
               className={`settlement__flow-step${summary ? ' settlement__flow-step--on' : ''}`}
             >
-              Balances (TRY)
+              {t('settlement.flowBalances')}
             </span>
             <span className="settlement__flow-sep" aria-hidden="true">
               →
@@ -134,15 +139,15 @@ function SettlementContent({ travelId }: { travelId: string }) {
             <span
               className={`settlement__flow-step${settlementResolved ? ' settlement__flow-step--on' : ''}`}
             >
-              Who pays whom
+              {t('settlement.flowWhoPays')}
             </span>
           </nav>
 
           <section className="settlement__card" aria-labelledby="sett-heading">
             <h2 id="sett-heading" className="settlement__section-title">
-              Suggested transfers
+              {t('settlement.suggestedTransfers')}
               {preview ? (
-                <span className="settlement__muted"> (preview)</span>
+                <span className="settlement__muted"> {t('settlement.preview')}</span>
               ) : null}
             </h2>
             {settlementLoading ? (
@@ -157,18 +162,11 @@ function SettlementContent({ travelId }: { travelId: string }) {
             ) : settlementError ? (
               <ApiErrorBanner error={settlementError} />
             ) : st === 'active' && transfers.length === 0 ? (
-              <p className="settlement__muted">
-                No settlement transfers yet. When everyone has finished the trip and
-                balances are computed, who should pay whom will appear here.
-              </p>
+              <p className="settlement__muted">{t('settlement.activeNoTransfers')}</p>
             ) : blockedAllFinished ? (
-              <p className="settlement__muted">
-                Everyone has finished, but balances cannot be computed yet. Make sure
-                every expense has a payer, then mark the trip finished again from the
-                trip page.
-              </p>
+              <p className="settlement__muted">{t('settlement.blockedAllFinished')}</p>
             ) : transfers.length === 0 ? (
-              <p className="settlement__muted">Everyone is even — no transfers needed.</p>
+              <p className="settlement__muted">{t('settlement.everyoneEven')}</p>
             ) : (
               <ul className="settlement__transfer-cards motion-list">
                 {transfers.map((row, i) => {
@@ -197,7 +195,7 @@ function SettlementContent({ travelId }: { travelId: string }) {
                           className="settlement__copy"
                           onClick={() => copyTransferAmount(row.amountTry, rowKey)}
                         >
-                          {copiedKey === rowKey ? 'Copied' : 'Copy TRY'}
+                          {copiedKey === rowKey ? t('settlement.copied') : t('settlement.copyTry')}
                         </button>
                       </div>
                     </li>
@@ -208,12 +206,18 @@ function SettlementContent({ travelId }: { travelId: string }) {
             {!settlementLoading && !settlementError && summary ? (
               <div className="settlement__summary" aria-labelledby="sett-sum-heading">
                 <h3 id="sett-sum-heading" className="settlement__section-title">
-                  Balances (TRY)
+                  {t('settlement.balancesTitle')}
                 </h3>
                 <p className="settlement__muted">
-                  Total {formatTry(summary.totalAmountTry)} · {summary.memberCount}{' '}
-                  {summary.memberCount === 1 ? 'person' : 'people'} · ~{' '}
-                  {formatTry(summary.equalShareTry)} each (rounded)
+                  {t('settlement.summaryLine', {
+                    total: formatTry(summary.totalAmountTry),
+                    count: summary.memberCount,
+                    people:
+                      summary.memberCount === 1
+                        ? t('settlement.person')
+                        : t('settlement.people'),
+                    each: formatTry(summary.equalShareTry),
+                  })}
                 </p>
                 <ul className="settlement__balance-list motion-list">
                   {summary.members.map((m, i) => (
@@ -226,8 +230,11 @@ function SettlementContent({ travelId }: { travelId: string }) {
                         {personLabel(m.email, m.displayName)}
                       </span>
                       <span className="settlement__amount">
-                        paid {formatTry(m.paidTry)} · share {formatTry(m.shareOwedTry)} · net{' '}
-                        {formatTry(m.netTry)}
+                        {t('settlement.balancePaidShare', {
+                          paid: formatTry(m.paidTry),
+                          share: formatTry(m.shareOwedTry),
+                          net: formatTry(m.netTry),
+                        })}
                       </span>
                     </li>
                   ))}
@@ -237,7 +244,7 @@ function SettlementContent({ travelId }: { travelId: string }) {
           </section>
 
           <p className="settlement__back">
-            <Link to={`/travels/${travel.id}`}>← Back to trip</Link>
+            <Link to={`/travels/${travel.id}`}>{t('settlement.backToTrip')}</Link>
           </p>
         </>
       )}
@@ -246,13 +253,14 @@ function SettlementContent({ travelId }: { travelId: string }) {
 }
 
 export function SettlementPage() {
+  const { t } = useTranslation()
   const { id: travelId } = useParams<{ id: string }>()
 
   return (
     <AppLayout>
       {!travelId ? (
         <main className="settlement__main">
-          <ApiErrorBanner error="Gezi kimliği eksik." />
+          <ApiErrorBanner error={t('settlement.missingId')} />
         </main>
       ) : (
         <SettlementContent key={travelId} travelId={travelId} />

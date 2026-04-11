@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getApiBaseUrl, getGoogleClientId } from '../config'
 import { useAuth } from '../auth/useAuth'
 import './AppLayout.css'
@@ -8,9 +9,14 @@ type AppLayoutProps = {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const { t, i18n } = useTranslation()
   const { user, ready, signInWithGoogle, signOut } = useAuth()
   const googleConfigured = Boolean(getGoogleClientId())
   const apiConfigured = Boolean(getApiBaseUrl())
+  const redirectExample =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/auth/callback`
+      : '/auth/callback'
 
   return (
     <div className="app-layout">
@@ -19,68 +25,71 @@ export function AppLayout({ children }: AppLayoutProps) {
           <span className="app-layout__logo" aria-hidden="true" />
           <span className="app-layout__wordmark">Gezify</span>
         </Link>
-        <nav className="app-layout__nav" aria-label="Account">
-          {!ready ? (
-            <span className="app-layout__nav-placeholder" aria-hidden="true" />
-          ) : user ? (
-            <div className="app-layout__user">
-              {user.avatarUrl ? (
-                <img
-                  className="app-layout__avatar"
-                  src={user.avatarUrl}
-                  alt=""
-                  width={32}
-                  height={32}
-                />
-              ) : null}
-              <span className="app-layout__user-name">
-                {user.displayName ?? user.email}
-              </span>
-              <button type="button" className="app-layout__sign-out" onClick={signOut}>
-                Sign out
-              </button>
-            </div>
-          ) : (
+        <div className="app-layout__header-right">
+          <div className="app-layout__lang" role="group" aria-label={t('common.language')}>
             <button
               type="button"
-              className="app-layout__sign-in"
-              onClick={() => signInWithGoogle()}
-              disabled={!googleConfigured || !apiConfigured}
-              title={
-                !apiConfigured
-                  ? 'Set VITE_API_URL to your API base URL.'
-                  : !googleConfigured
-                    ? 'Set VITE_GOOGLE_CLIENT_ID (Web client ID from Google Cloud).'
-                    : undefined
-              }
+              className={`app-layout__lang-btn${i18n.language === 'en' ? ' app-layout__lang-btn--on' : ''}`}
+              onClick={() => void i18n.changeLanguage('en')}
             >
-              Sign in with Google
+              EN
             </button>
-          )}
-        </nav>
+            <button
+              type="button"
+              className={`app-layout__lang-btn${i18n.language === 'tr' ? ' app-layout__lang-btn--on' : ''}`}
+              onClick={() => void i18n.changeLanguage('tr')}
+            >
+              TR
+            </button>
+          </div>
+          <nav className="app-layout__nav" aria-label="Account">
+            {!ready ? (
+              <span className="app-layout__nav-placeholder" aria-hidden="true" />
+            ) : user ? (
+              <div className="app-layout__user">
+                {user.avatarUrl ? (
+                  <img
+                    className="app-layout__avatar"
+                    src={user.avatarUrl}
+                    alt=""
+                    width={32}
+                    height={32}
+                  />
+                ) : null}
+                <span className="app-layout__user-name">
+                  {user.displayName ?? user.email}
+                </span>
+                <button type="button" className="app-layout__sign-out" onClick={signOut}>
+                  {t('app.signOut')}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="app-layout__sign-in"
+                onClick={() => signInWithGoogle()}
+                disabled={!googleConfigured || !apiConfigured}
+                title={
+                  !apiConfigured
+                    ? t('app.titleApiUrl')
+                    : !googleConfigured
+                      ? t('app.titleGoogleId')
+                      : undefined
+                }
+              >
+                {t('app.signInGoogle')}
+              </button>
+            )}
+          </nav>
+        </div>
       </header>
 
       {(!googleConfigured || !apiConfigured) && (
         <div className="app-layout__banner" role="status">
-          <strong>Dev setup:</strong>{' '}
-          {!apiConfigured && (
-            <span>
-              Add <code className="app-layout__code">VITE_API_URL</code> (e.g.{' '}
-              <code className="app-layout__code">http://localhost:8050</code>
-              ).{' '}
-            </span>
-          )}
+          <strong>{t('app.devSetup')}</strong>{' '}
+          {!apiConfigured && <span>{t('app.devApiUrl')}</span>}
           {!googleConfigured && (
-            <span>
-              Add <code className="app-layout__code">VITE_GOOGLE_CLIENT_ID</code>. Use the
-              same redirect URI as in Google Cloud:{' '}
-              <code className="app-layout__code">
-                {typeof window !== 'undefined'
-                  ? `${window.location.origin}/auth/callback`
-                  : '/auth/callback'}
-              </code>
-              .
-            </span>
+            <span>{t('app.devGoogleId', { uri: redirectExample })}</span>
           )}
         </div>
       )}
@@ -88,7 +97,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="app-layout__body">{children}</div>
 
       <footer className="app-layout__footer">
-        <p className="app-layout__footer-note">Gezify — group travel, fair splits.</p>
+        <p className="app-layout__footer-note">{t('app.footer')}</p>
       </footer>
     </div>
   )

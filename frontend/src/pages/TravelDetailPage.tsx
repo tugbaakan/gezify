@@ -5,6 +5,7 @@ import {
   type CSSProperties,
   type FormEvent,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import {
   createTravelInvitation,
@@ -71,12 +72,13 @@ function sortExpenses(list: ExpenseDetail[], sort: ExpenseSort): ExpenseDetail[]
 
 function groupExpensesByLocalDay(
   sorted: ExpenseDetail[],
+  locale: string,
 ): { dayKey: string; dayLabel: string; items: ExpenseDetail[] }[] {
   const groups: { dayKey: string; dayLabel: string; items: ExpenseDetail[] }[] = []
   for (const e of sorted) {
     const d = new Date(e.expenseDate)
     const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const dayLabel = d.toLocaleDateString(undefined, {
+    const dayLabel = d.toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -90,6 +92,8 @@ function groupExpensesByLocalDay(
 }
 
 function TravelDetailContent({ travelId }: { travelId: string }) {
+  const { t, i18n: i18next } = useTranslation()
+  const locale = i18next.language
   const [travel, setTravel] = useState<TravelDetail | null>(null)
   const [expenses, setExpenses] = useState<ExpenseDetail[] | null>(null)
   const [members, setMembers] = useState<TravelMember[] | null>(null)
@@ -109,8 +113,8 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
         ? expenses
         : expenses.filter((e) => e.category === expenseCategory)
     const sorted = sortExpenses(filtered, expenseSort)
-    return groupExpensesByLocalDay(sorted)
-  }, [expenses, expenseCategory, expenseSort])
+    return groupExpensesByLocalDay(sorted, locale)
+  }, [expenses, expenseCategory, expenseSort, locale])
 
   useEffect(() => {
     let cancelled = false
@@ -121,10 +125,10 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
       fetchTravelMembers(travelId),
       fetchTravelInvitations(travelId),
     ])
-      .then(([t, ex, m, inv]) => {
+      .then(([tr, ex, m, inv]) => {
         if (!cancelled) {
           setError(null)
-          setTravel(t)
+          setTravel(tr)
           setExpenses(ex)
           setMembers(m)
           setInvitations(inv)
@@ -133,14 +137,14 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
       .catch((e: unknown) => {
         if (!cancelled) {
           if (e instanceof ApiRequestError) setError(e)
-          else setError('Gezi yüklenemedi.')
+          else setError(i18next.t('travelDetail.loadFailed'))
         }
       })
 
     return () => {
       cancelled = true
     }
-  }, [travelId])
+  }, [travelId, i18next])
 
   const canInvite = travel?.status === 'active'
 
@@ -150,7 +154,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
     setInviteSuccess(null)
     const trimmed = inviteEmail.trim()
     if (!trimmed) {
-      setInviteError('Enter your friend’s email address.')
+      setInviteError(t('travelDetail.inviteEmailRequired'))
       return
     }
     setInviteBusy(true)
@@ -158,16 +162,14 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
       await createTravelInvitation(travelId, trimmed)
       const nextInv = await fetchTravelInvitations(travelId)
       setInvitations(nextInv)
-      setInviteSuccess(
-        `Invitation sent to ${trimmed}. They can join using the link in the email (Google account must match that address).`,
-      )
+      setInviteSuccess(t('travelDetail.inviteSuccess', { email: trimmed }))
       setInviteEmail('')
     } catch (e: unknown) {
       if (e instanceof ApiRequestError) {
         const detail = firstValidationDetailMessage(e)
         setInviteError(detail ?? e.message)
       } else {
-        setInviteError('Could not send invitation.')
+        setInviteError(t('travelDetail.inviteSendFailed'))
       }
     } finally {
       setInviteBusy(false)
@@ -177,10 +179,10 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
   return (
     <main className="travel-detail__main">
       <nav className="travel-detail__crumb" aria-label="Breadcrumb">
-        <Link to="/">Travels</Link>
+        <Link to="/">{t('travelDetail.breadcrumbTrips')}</Link>
         <span aria-hidden="true"> / </span>
         <span className="travel-detail__crumb-current">
-          {travel?.name ?? 'Trip'}
+          {travel?.name ?? t('travelDetail.tripFallback')}
         </span>
       </nav>
 
@@ -206,13 +208,13 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                   className="travel-detail__btn travel-detail__btn--secondary"
                   to={`/travels/${travel.id}/settlement`}
                 >
-                  Settlement
+                  {t('travelDetail.settlement')}
                 </Link>
                 <Link
                   className="travel-detail__btn travel-detail__btn--primary"
                   to={`/travels/${travel.id}/expenses/new`}
                 >
-                  Add expense
+                  {t('travelDetail.addExpense')}
                 </Link>
               </div>
             </div>
@@ -223,7 +225,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
             aria-labelledby="members-heading"
           >
             <h2 id="members-heading" className="travel-detail__section-title">
-              Group
+              {t('travelDetail.group')}
             </h2>
             <ul className="travel-detail__members motion-list">
               {members.map((m, i) => (
@@ -241,11 +243,10 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
             {canInvite ? (
               <form className="travel-detail__invite" onSubmit={onInviteSubmit}>
                 <label className="travel-detail__invite-label" htmlFor="invite-email">
-                  Invite a friend
+                  {t('travelDetail.inviteFriend')}
                 </label>
                 <p className="travel-detail__invite-hint" id="invite-email-desc">
-                  We’ll email them a link to join this trip. They must sign in with the same Google
-                  account as this address.
+                  {t('travelDetail.inviteHint')}
                 </p>
                 <div className="travel-detail__invite-row">
                   <input
@@ -254,7 +255,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                     type="email"
                     name="email"
                     autoComplete="email"
-                    placeholder="friend@example.com"
+                    placeholder={t('travelDetail.invitePlaceholder')}
                     value={inviteEmail}
                     onChange={(ev) => setInviteEmail(ev.target.value)}
                     disabled={inviteBusy}
@@ -265,7 +266,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                     className="travel-detail__btn travel-detail__btn--secondary travel-detail__invite-submit"
                     disabled={inviteBusy}
                   >
-                    {inviteBusy ? 'Sending…' : 'Send invite'}
+                    {inviteBusy ? t('common.sending') : t('travelDetail.sendInvite')}
                   </button>
                 </div>
                 {inviteError ? (
@@ -281,16 +282,16 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
               </form>
             ) : (
               <p className="travel-detail__muted travel-detail__invite-disabled">
-                Invites are only available while the trip is active.
+                {t('travelDetail.inviteDisabled')}
               </p>
             )}
 
             <div className="travel-detail__invites-table-wrap">
               <h3 className="travel-detail__invites-table-title" id="invites-table-heading">
-                Invitations
+                {t('travelDetail.invitations')}
               </h3>
               {invitations.length === 0 ? (
-                <p className="travel-detail__muted">Henüz davet yok.</p>
+                <p className="travel-detail__muted">{t('travelDetail.noInvitesYet')}</p>
               ) : (
                 <div
                   className="travel-detail__table-scroll"
@@ -301,11 +302,11 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                   <table className="travel-detail__table">
                     <thead>
                       <tr>
-                        <th scope="col">Email</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Sent</th>
-                        <th scope="col">Accepted</th>
-                        <th scope="col">Invited by</th>
+                        <th scope="col">{t('common.email')}</th>
+                        <th scope="col">{t('common.status')}</th>
+                        <th scope="col">{t('common.sent')}</th>
+                        <th scope="col">{t('common.accepted')}</th>
+                        <th scope="col">{t('common.invitedBy')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -320,18 +321,18 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                             </span>
                           </td>
                           <td className="travel-detail__table-cell--date">
-                            {new Date(row.createdAt).toLocaleString(undefined, {
+                            {new Date(row.createdAt).toLocaleString(locale, {
                               dateStyle: 'medium',
                               timeStyle: 'short',
                             })}
                           </td>
                           <td className="travel-detail__table-cell--date">
                             {row.acceptedAt
-                              ? new Date(row.acceptedAt).toLocaleString(undefined, {
+                              ? new Date(row.acceptedAt).toLocaleString(locale, {
                                   dateStyle: 'medium',
                                   timeStyle: 'short',
                                 })
-                              : '—'}
+                              : t('common.dash')}
                           </td>
                           <td>
                             {row.invitedByDisplayName?.trim() || row.invitedByEmail}
@@ -347,19 +348,17 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
 
           <section className="travel-detail__section" aria-labelledby="exp-heading">
             <h2 id="exp-heading" className="travel-detail__section-title">
-              Expenses
+              {t('travelDetail.expenses')}
             </h2>
             {expenses.length === 0 ? (
               <div className="travel-detail__empty-card" role="status">
-                <p className="travel-detail__empty-title">Henüz gider yok</p>
-                <p className="travel-detail__empty-copy">
-                  İlk harcamayı ekleyerek gruptaki payları hesaplamaya başlayın.
-                </p>
+                <p className="travel-detail__empty-title">{t('travelDetail.noExpensesTitle')}</p>
+                <p className="travel-detail__empty-copy">{t('travelDetail.noExpensesCopy')}</p>
                 <Link
                   className="travel-detail__btn travel-detail__btn--primary travel-detail__empty-cta"
                   to={`/travels/${travel.id}/expenses/new`}
                 >
-                  Gider ekle
+                  {t('travelDetail.addExpenseCta')}
                 </Link>
               </div>
             ) : (
@@ -368,7 +367,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                   <div className="travel-detail__expense-toolbar-inner">
                     <div className="travel-detail__toolbar-field">
                       <label className="travel-detail__toolbar-label" htmlFor="travel-exp-sort">
-                        Sort
+                        {t('travelDetail.sort')}
                       </label>
                       <select
                         id="travel-exp-sort"
@@ -376,15 +375,15 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                         value={expenseSort}
                         onChange={(ev) => setExpenseSort(ev.target.value as ExpenseSort)}
                       >
-                        <option value="date-desc">Newest first</option>
-                        <option value="date-asc">Oldest first</option>
-                        <option value="try-desc">Highest TRY</option>
-                        <option value="try-asc">Lowest TRY</option>
+                        <option value="date-desc">{t('travelDetail.sortDateDesc')}</option>
+                        <option value="date-asc">{t('travelDetail.sortDateAsc')}</option>
+                        <option value="try-desc">{t('travelDetail.sortTryDesc')}</option>
+                        <option value="try-asc">{t('travelDetail.sortTryAsc')}</option>
                       </select>
                     </div>
                     <div className="travel-detail__toolbar-field">
                       <label className="travel-detail__toolbar-label" htmlFor="travel-exp-cat">
-                        Category
+                        {t('travelDetail.category')}
                       </label>
                       <select
                         id="travel-exp-cat"
@@ -394,7 +393,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                           setExpenseCategory(ev.target.value as ExpenseCategory | 'all')
                         }
                       >
-                        <option value="all">All categories</option>
+                        <option value="all">{t('travelDetail.allCategories')}</option>
                         {expenseCategoriesForFilter().map((c) => (
                           <option key={c} value={c}>
                             {formatExpenseCategory(c)}
@@ -405,23 +404,23 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                   </div>
                 </div>
                 {expenseGroups.length === 0 ? (
-                  <p className="travel-detail__muted">Bu filtreye uyan gider yok.</p>
+                  <p className="travel-detail__muted">{t('travelDetail.noMatchFilter')}</p>
                 ) : (
                   <div className="travel-detail__expense-groups">
                     <div
                       className="travel-detail__expense-column-labels"
                       aria-hidden="true"
                     >
-                      <span>Original</span>
-                      <span>TRY (locked)</span>
+                      <span>{t('travelDetail.columnOriginal')}</span>
+                      <span>{t('travelDetail.columnTry')}</span>
                     </div>
                     {expenseGroups.map((g) => (
                       <div key={g.dayKey} className="travel-detail__expense-day">
                         <h3 className="travel-detail__day-heading">{g.dayLabel}</h3>
                         <ul className="travel-detail__expenses motion-list">
-                          {g.items.map((e, i) => (
+                          {g.items.map((ex, i) => (
                             <li
-                              key={e.id}
+                              key={ex.id}
                               className="travel-detail__expense"
                               style={
                                 { ['--stagger' as string]: String(i) } as CSSProperties
@@ -429,33 +428,33 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                             >
                               <div className="travel-detail__expense-main">
                                 <span className="travel-detail__expense-cat">
-                                  {formatExpenseCategory(e.category)}
+                                  {formatExpenseCategory(ex.category)}
                                 </span>
-                                {e.location ? (
+                                {ex.location ? (
                                   <span className="travel-detail__expense-loc">
-                                    {e.location}
+                                    {ex.location}
                                   </span>
                                 ) : null}
                               </div>
                               <div className="travel-detail__expense-amounts">
                                 <span className="travel-detail__expense-original">
-                                  {e.amount.toLocaleString(undefined, {
+                                  {ex.amount.toLocaleString(locale, {
                                     minimumFractionDigits: 0,
                                     maximumFractionDigits: 2,
                                   })}{' '}
-                                  {e.currency}
+                                  {ex.currency}
                                 </span>
                                 <span className="travel-detail__expense-try">
-                                  {formatTry(e.amountTry)}
+                                  {formatTry(ex.amountTry)}
                                 </span>
                               </div>
                               <div className="travel-detail__expense-meta">
                                 <span>
-                                  Paid by:{' '}
-                                  {e.paidBy ? memberLabel(e.paidBy) : '—'}
+                                  {t('travelDetail.paidBy')}{' '}
+                                  {ex.paidBy ? memberLabel(ex.paidBy) : t('common.dash')}
                                 </span>
                                 <span>
-                                  {new Date(e.expenseDate).toLocaleString(undefined, {
+                                  {new Date(ex.expenseDate).toLocaleString(locale, {
                                     dateStyle: 'medium',
                                     timeStyle: 'short',
                                   })}
@@ -478,13 +477,14 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
 }
 
 export function TravelDetailPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
 
   return (
     <AppLayout>
       {!id ? (
         <main className="travel-detail__main">
-          <ApiErrorBanner error="Gezi kimliği eksik." />
+          <ApiErrorBanner error={t('travelDetail.missingId')} />
         </main>
       ) : (
         <TravelDetailContent key={id} travelId={id} />

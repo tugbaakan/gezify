@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { ApiRequestError } from '../api/client'
 
 /** First field message from a `422` validation envelope, if any. */
@@ -20,10 +21,13 @@ export type ApiErrorBannerContent = {
 }
 
 /**
- * Maps backend HTTP statuses (401 / 403 / 404 / 422 / 500 / 502) to concise Turkish copy,
+ * Maps backend HTTP statuses (401 / 403 / 404 / 422 / 500 / 502) to concise copy,
  * aligned with Gezify’s standardized JSON errors (see architecture doc).
  */
-export function apiErrorToBannerContent(err: ApiRequestError): ApiErrorBannerContent {
+export function apiErrorToBannerContent(
+  err: ApiRequestError,
+  t: TFunction,
+): ApiErrorBannerContent {
   const backendMsg = err.body?.error.message?.trim()
   const validationLine = firstValidationDetailMessage(err)
 
@@ -32,58 +36,56 @@ export function apiErrorToBannerContent(err: ApiRequestError): ApiErrorBannerCon
       return {
         variant: 'warning',
         status: 401,
-        title: 'Oturum gerekli veya süresi doldu',
-        body: backendMsg || 'Google ile tekrar giriş yap.',
+        title: t('apiErrors.401.title'),
+        body: backendMsg || t('apiErrors.401.body'),
       }
     case 403:
       return {
         variant: 'warning',
         status: 403,
-        title: 'Bu işlem için yetkin yok',
-        body: backendMsg || 'Bu geziye üye değilsen erişemezsin.',
+        title: t('apiErrors.403.title'),
+        body: backendMsg || t('apiErrors.403.body'),
       }
     case 404:
       return {
         variant: 'info',
         status: 404,
-        title: 'Bulunamadı',
-        body: backendMsg || 'Aradığın kayıt yok veya kaldırılmış olabilir.',
+        title: t('apiErrors.404.title'),
+        body: backendMsg || t('apiErrors.404.body'),
       }
     case 422:
       return {
         variant: 'danger',
         status: 422,
-        title: 'Girdiğin bilgileri kontrol et',
+        title: t('apiErrors.422.title'),
         body: validationLine ?? backendMsg ?? err.message,
       }
     case 500:
       return {
         variant: 'danger',
         status: 500,
-        title: 'Sunucu hatası',
-        body:
-          backendMsg ||
-          'Kısa süre sonra tekrar dene. Sorun sürerse gezi sahibiyle iletişime geç.',
+        title: t('apiErrors.500.title'),
+        body: backendMsg || t('apiErrors.500.body'),
       }
     case 502:
       return {
         variant: 'danger',
         status: 502,
-        title: 'Harici servis yanıt vermiyor',
-        body: backendMsg || 'Kur veya e-posta servisi geçici olarak kullanılamıyor olabilir.',
+        title: t('apiErrors.502.title'),
+        body: backendMsg || t('apiErrors.502.body'),
       }
     case 0:
       return {
         variant: 'danger',
         status: 0,
-        title: 'API adresi eksik veya ağ hatası',
+        title: t('apiErrors.0.title'),
         body: err.message,
       }
     default:
       return {
         variant: 'danger',
         status: err.status,
-        title: 'Bir şeyler ters gitti',
+        title: t('apiErrors.default.title'),
         body: backendMsg || err.message,
       }
   }
