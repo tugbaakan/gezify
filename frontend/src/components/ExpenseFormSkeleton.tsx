@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next'
 import './skeleton.css'
 import './ExpenseFormSkeleton.css'
 
 export function ExpenseFormSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div className="expense-form-skel" aria-busy="true" aria-label="Form yükleniyor">
+    <div className="expense-form-skel" aria-busy="true" aria-label={t('common.loadingForm')}>
       <div className="expense-form-skel__title gf-skel" />
       {[0, 1, 2, 3, 4].map((i) => (
         <div key={i} className="expense-form-skel__field">

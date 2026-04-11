@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next'
 import './skeleton.css'
 import './SettlementSkeleton.css'
 
 export function SettlementSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div className="settlement-skel" aria-busy="true" aria-label="Ödeme özeti yükleniyor">
+    <div className="settlement-skel" aria-busy="true" aria-label={t('common.loadingSettlement')}>
       <div className="settlement-skel__crumb gf-skel" />
       <div className="settlement-skel__head-title gf-skel" />
       <div className="settlement-skel__head-sub gf-skel" />

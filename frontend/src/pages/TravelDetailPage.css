@@ -125,7 +125,7 @@
 .travel-detail__status-chip--settling {
   background: var(--accent-secondary-bg);
   border-color: color-mix(in srgb, var(--accent-secondary) 45%, var(--border));
-  color: color-mix(in srgb, var(--text-h) 55%, #8a6210);
+  color: #4a3506;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -268,7 +268,7 @@
 }
 
 .travel-detail__toolbar-select:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -448,9 +448,9 @@
   color: var(--text-h);
 }
 
-.travel-detail__invite-input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.travel-detail__invite-input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .travel-detail__invite-input:disabled {
@@ -553,7 +553,7 @@
 
 .travel-detail__invite-status--pending {
   background: var(--accent-secondary-bg);
-  color: #8a6210;
+  color: #4a3506;
 }
 
 .travel-detail__invite-status--accepted {

@@ -12,7 +12,7 @@ function readStoredLng(): 'en' | 'tr' {
   } catch {
     /* ignore */
   }
-  return 'en'
+  return 'tr'
 }
 
 const initialLng = readStoredLng()

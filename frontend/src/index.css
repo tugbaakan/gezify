@@ -4,7 +4,8 @@
   --brand-yellow: #f7d06d;
   --brand-white: #ffffff;
 
-  --text: #6b5f68;
+  /* Body text: slightly darker for WCAG AA contrast on white */
+  --text: #53454d;
   --text-h: #1c1419;
   --bg: var(--brand-white);
   --border: color-mix(in srgb, var(--brand-pink) 11%, #e6e2e4);
@@ -13,7 +14,7 @@
   --accent: var(--brand-pink);
   --accent-hover: #e050a0;
   --accent-fg: var(--brand-white);
-  --accent-text: #b03d78;
+  --accent-text: #92285f;
   --accent-bg: color-mix(in srgb, var(--brand-pink) 14%, transparent);
   --accent-border: color-mix(in srgb, var(--brand-pink) 42%, transparent);
   --accent-soft: color-mix(in srgb, var(--brand-pink) 18%, transparent);
@@ -24,6 +25,10 @@
   --social-bg: color-mix(in srgb, var(--brand-pink) 7%, var(--brand-white));
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  /* Focus ring: distinct from brand pink for visibility (light + dark) */
+  --focus-ring: #1d4ed8;
+  --focus-ring-offset: 2px;
 
   --sans: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --heading: 'Carter One', 'Trebuchet MS', sans-serif;
@@ -49,7 +54,7 @@
     --brand-pink: #ff7dc0;
     --brand-yellow: #f7d06d;
 
-    --text: #c9b8c2;
+    --text: #d4c4cf;
     --text-h: #fdf7fb;
     --bg: #171418;
     --border: #332b30;
@@ -58,7 +63,7 @@
     --accent: var(--brand-pink);
     --accent-hover: #ff9cd0;
     --accent-fg: #1a1216;
-    --accent-text: #ffb3de;
+    --accent-text: #ffc2e6;
     --accent-bg: color-mix(in srgb, var(--brand-pink) 22%, transparent);
     --accent-border: color-mix(in srgb, var(--brand-pink) 48%, transparent);
     --accent-soft: color-mix(in srgb, var(--brand-pink) 28%, transparent);
@@ -68,7 +73,19 @@
     --social-bg: color-mix(in srgb, var(--brand-pink) 10%, transparent);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+
+    --focus-ring: #93c5fd;
   }
+}
+
+/* Keyboard focus: consistent ring in light and dark themes */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:is(a, button, input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 #root {

@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next'
 import './skeleton.css'
 import './TravelDetailSkeleton.css'
 
 export function TravelDetailSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div className="travel-detail-skel" aria-busy="true" aria-label="Gezi yükleniyor">
+    <div className="travel-detail-skel" aria-busy="true" aria-label={t('common.loadingTravelDetail')}>
       <div className="travel-detail-skel__crumb gf-skel" />
       <div className="travel-detail-skel__sticky">
         <div className="travel-detail-skel__title gf-skel" />

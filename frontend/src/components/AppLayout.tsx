@@ -42,7 +42,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               TR
             </button>
           </div>
-          <nav className="app-layout__nav" aria-label="Account">
+          <nav className="app-layout__nav" aria-label={t('common.ariaAccountNav')}>
             {!ready ? (
               <span className="app-layout__nav-placeholder" aria-hidden="true" />
             ) : user ? (

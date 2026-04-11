@@ -163,7 +163,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
 
   return (
     <main className="new-expense__main">
-      <nav className="new-expense__crumb" aria-label="Breadcrumb">
+      <nav className="new-expense__crumb" aria-label={t('common.ariaBreadcrumb')}>
         <Link to="/">{t('newExpense.breadcrumbTrips')}</Link>
         <span aria-hidden="true"> / </span>
         <Link to={`/travels/${travelId}`}>{t('newExpense.trip')}</Link>

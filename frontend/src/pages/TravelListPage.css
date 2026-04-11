@@ -98,7 +98,7 @@
 }
 
 .travel-list__input:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -178,6 +178,12 @@
   background: color-mix(in srgb, var(--bg) 90%, var(--accent) 10%);
 }
 
+.travel-list__link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 .travel-list__link-name {
   font-weight: 500;
   min-width: 0;
@@ -207,7 +213,7 @@
 .travel-list__status-chip--settling {
   background: var(--accent-secondary-bg);
   border-color: color-mix(in srgb, var(--accent-secondary) 45%, var(--border));
-  color: color-mix(in srgb, var(--text-h) 55%, #8a6210);
+  color: #4a3506;
 }
 
 @media (prefers-color-scheme: dark) {

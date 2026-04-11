@@ -21,6 +21,13 @@ export const tr = {
     language: 'Dil',
     english: 'İngilizce',
     turkish: 'Türkçe',
+    ariaBreadcrumb: 'Sayfa konumu',
+    ariaAccountNav: 'Hesap',
+    ariaSettlementFlow: 'Hesap kapatma adımları',
+    loadingForm: 'Form yükleniyor',
+    loadingTravelDetail: 'Gezi yükleniyor',
+    loadingTravelList: 'Geziler yükleniyor',
+    loadingSettlement: 'Ödeme özeti yükleniyor',
   },
   app: {
     signOut: 'Çıkış',

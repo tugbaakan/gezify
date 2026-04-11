@@ -19,6 +19,13 @@ export const en = {
     language: 'Language',
     english: 'English',
     turkish: 'Turkish',
+    ariaBreadcrumb: 'Breadcrumb',
+    ariaAccountNav: 'Account',
+    ariaSettlementFlow: 'Settlement steps',
+    loadingForm: 'Loading form',
+    loadingTravelDetail: 'Loading trip',
+    loadingTravelList: 'Loading trips',
+    loadingSettlement: 'Loading settlement',
   },
   app: {
     signOut: 'Sign out',

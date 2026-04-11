@@ -1,13 +1,37 @@
 import type { ExpenseCategory, TravelStatus } from '../api/types'
 import { i18n } from '../i18n'
 
+/** TRY is always formatted with Turkish locale rules (₺ placement, grouping). */
+const TRY_LOCALE = 'tr-TR'
+
 export function formatTry(amount: number): string {
-  return new Intl.NumberFormat(i18n.language || undefined, {
+  return new Intl.NumberFormat(TRY_LOCALE, {
     style: 'currency',
     currency: 'TRY',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount)
+}
+
+function intlLocaleForUi(): string {
+  const lng = i18n.resolvedLanguage ?? i18n.language
+  return lng === 'tr' ? 'tr-TR' : 'en-US'
+}
+
+/** Original expense line: ISO currency with UI locale (tr vs en). */
+export function formatForeignAmount(amount: number, currency: string): string {
+  const code = currency.trim().toUpperCase()
+  if (code === 'TRY') return formatTry(amount)
+  try {
+    return new Intl.NumberFormat(intlLocaleForUi(), {
+      style: 'currency',
+      currency: code,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  } catch {
+    return `${amount} ${code}`
+  }
 }
 
 export function formatExpenseCategory(cat: string): string {

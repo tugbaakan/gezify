@@ -42,7 +42,7 @@
 }
 
 .app-layout__brand:focus-visible {
-  outline: 2px solid var(--page-accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 4px;
   border-radius: 6px;
 }
@@ -103,7 +103,7 @@
 }
 
 .app-layout__lang-btn:focus-visible {
-  outline: 2px solid var(--page-accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   z-index: 1;
 }
@@ -187,7 +187,7 @@
 }
 
 .app-layout__sign-out:focus-visible {
-  outline: 2px solid var(--page-accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -213,7 +213,7 @@
 }
 
 .app-layout__sign-in:focus-visible {
-  outline: 2px solid var(--page-accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 

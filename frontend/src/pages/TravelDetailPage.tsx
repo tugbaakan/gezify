@@ -29,6 +29,7 @@ import { firstValidationDetailMessage } from '../utils/apiErrorDisplay'
 import {
   expenseCategoriesForFilter,
   formatExpenseCategory,
+  formatForeignAmount,
   formatTry,
   invitationStatusLabel,
   travelStatusChipTone,
@@ -178,7 +179,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
 
   return (
     <main className="travel-detail__main">
-      <nav className="travel-detail__crumb" aria-label="Breadcrumb">
+      <nav className="travel-detail__crumb" aria-label={t('common.ariaBreadcrumb')}>
         <Link to="/">{t('travelDetail.breadcrumbTrips')}</Link>
         <span aria-hidden="true"> / </span>
         <span className="travel-detail__crumb-current">
@@ -438,11 +439,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                               </div>
                               <div className="travel-detail__expense-amounts">
                                 <span className="travel-detail__expense-original">
-                                  {ex.amount.toLocaleString(locale, {
-                                    minimumFractionDigits: 0,
-                                    maximumFractionDigits: 2,
-                                  })}{' '}
-                                  {ex.currency}
+                                  {formatForeignAmount(ex.amount, ex.currency)}
                                 </span>
                                 <span className="travel-detail__expense-try">
                                   {formatTry(ex.amountTry)}

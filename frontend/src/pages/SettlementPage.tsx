@@ -96,7 +96,7 @@ function SettlementContent({ travelId }: { travelId: string }) {
 
   return (
     <main className="settlement__main">
-      <nav className="settlement__crumb" aria-label="Breadcrumb">
+      <nav className="settlement__crumb" aria-label={t('common.ariaBreadcrumb')}>
         <Link to="/">{t('settlement.breadcrumbTrips')}</Link>
         <span aria-hidden="true"> / </span>
         <Link to={`/travels/${travelId}`}>
@@ -119,7 +119,7 @@ function SettlementContent({ travelId }: { travelId: string }) {
             </p>
           </header>
 
-          <nav className="settlement__flow" aria-label="Settlement steps">
+          <nav className="settlement__flow" aria-label={t('common.ariaSettlementFlow')}>
             <span
               className={`settlement__flow-step${travel ? ' settlement__flow-step--on' : ''}`}
             >
