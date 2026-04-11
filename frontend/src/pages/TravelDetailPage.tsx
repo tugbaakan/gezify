@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+} from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   createTravelInvitation,
@@ -227,9 +233,13 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
             <h2 id="members-heading" className="travel-detail__section-title">
               Group
             </h2>
-            <ul className="travel-detail__members">
-              {members.map((m) => (
-                <li key={m.userId} className="travel-detail__member">
+            <ul className="travel-detail__members motion-list">
+              {members.map((m, i) => (
+                <li
+                  key={m.userId}
+                  className="travel-detail__member"
+                  style={{ ['--stagger' as string]: String(i) } as CSSProperties}
+                >
                   <span className="travel-detail__member-name">{memberLabel(m)}</span>
                   <span className="travel-detail__member-email">{m.email}</span>
                 </li>
@@ -405,9 +415,15 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                     {expenseGroups.map((g) => (
                       <div key={g.dayKey} className="travel-detail__expense-day">
                         <h3 className="travel-detail__day-heading">{g.dayLabel}</h3>
-                        <ul className="travel-detail__expenses">
-                          {g.items.map((e) => (
-                            <li key={e.id} className="travel-detail__expense">
+                        <ul className="travel-detail__expenses motion-list">
+                          {g.items.map((e, i) => (
+                            <li
+                              key={e.id}
+                              className="travel-detail__expense"
+                              style={
+                                { ['--stagger' as string]: String(i) } as CSSProperties
+                              }
+                            >
                               <div className="travel-detail__expense-main">
                                 <span className="travel-detail__expense-cat">
                                   {formatExpenseCategory(e.category)}

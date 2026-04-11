@@ -171,7 +171,10 @@
   text-decoration: none;
   color: var(--text-h);
   border-top: 1px solid var(--border);
-  transition: background 0.15s;
+  transition:
+    background 0.15s ease,
+    transform var(--motion-duration-press) var(--motion-ease-out),
+    filter var(--motion-duration-press) var(--motion-ease-out);
 }
 
 .travel-list__link:hover {

@@ -129,3 +129,111 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* --- Motion (subtle); respects prefers-reduced-motion --- */
+:root {
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-duration-route: 240ms;
+  --motion-duration-list: 280ms;
+  --motion-duration-press: 140ms;
+  --motion-stagger-step: 26ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-route: 1ms;
+    --motion-duration-list: 1ms;
+    --motion-duration-press: 1ms;
+    --motion-stagger-step: 0ms;
+  }
+}
+
+@keyframes motion-route-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+
+.motion-route {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  animation: motion-route-in var(--motion-duration-route) var(--motion-ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-route {
+    animation: none;
+  }
+}
+
+@keyframes motion-list-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.motion-list > * {
+  animation: motion-list-in var(--motion-duration-list) var(--motion-ease-out) both;
+  animation-delay: calc(min(var(--stagger, 0), 16) * var(--motion-stagger-step));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-list > * {
+    animation: none;
+  }
+}
+
+/* Tap / press feedback on primary controls */
+button,
+input[type='submit'],
+input[type='button'],
+.travel-detail__btn,
+.travel-list__primary,
+.invite__primary,
+.new-expense__submit,
+.new-expense__cancel,
+.app-layout__sign-in,
+.app-layout__sign-out,
+.settlement__copy {
+  transition:
+    transform var(--motion-duration-press) var(--motion-ease-out),
+    filter var(--motion-duration-press) var(--motion-ease-out);
+}
+
+button:not(:disabled):active,
+input[type='submit']:not(:disabled):active,
+input[type='button']:not(:disabled):active,
+.travel-detail__btn:active,
+.travel-list__primary:not(:disabled):active,
+.invite__primary:not(:disabled):active,
+.new-expense__submit:not(:disabled):active,
+.new-expense__cancel:active,
+.app-layout__sign-in:not(:disabled):active,
+.app-layout__sign-out:active,
+.settlement__copy:active,
+.travel-list__link:active {
+  transform: scale(0.98);
+  filter: brightness(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active,
+  input[type='submit']:not(:disabled):active,
+  input[type='button']:not(:disabled):active,
+  .travel-detail__btn:active,
+  .travel-list__primary:not(:disabled):active,
+  .invite__primary:not(:disabled):active,
+  .new-expense__submit:not(:disabled):active,
+  .new-expense__cancel:active,
+  .app-layout__sign-in:not(:disabled):active,
+  .app-layout__sign-out:active,
+  .settlement__copy:active,
+  .travel-list__link:active {
+    transform: none;
+    filter: none;
+  }
+}

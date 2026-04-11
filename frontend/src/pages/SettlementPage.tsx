@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   fetchTravel,
@@ -163,11 +163,15 @@ function SettlementContent({ travelId }: { travelId: string }) {
             ) : transfers.length === 0 ? (
               <p className="settlement__muted">Everyone is even — no transfers needed.</p>
             ) : (
-              <ul className="settlement__transfer-cards">
+              <ul className="settlement__transfer-cards motion-list">
                 {transfers.map((row, i) => {
                   const rowKey = `${row.fromUserId}-${row.toUserId}-${i}`
                   return (
-                    <li key={rowKey} className="settlement__transfer-card">
+                    <li
+                      key={rowKey}
+                      className="settlement__transfer-card"
+                      style={{ ['--stagger' as string]: String(i) } as CSSProperties}
+                    >
                       <div className="settlement__transfer-flow">
                         <span className="settlement__party">
                           {personLabel(row.fromEmail, row.fromDisplayName)}
@@ -204,9 +208,13 @@ function SettlementContent({ travelId }: { travelId: string }) {
                   {summary.memberCount === 1 ? 'person' : 'people'} · ~{' '}
                   {formatTry(summary.equalShareTry)} each (rounded)
                 </p>
-                <ul className="settlement__balance-list">
-                  {summary.members.map((m) => (
-                    <li key={m.userId} className="settlement__balance-row">
+                <ul className="settlement__balance-list motion-list">
+                  {summary.members.map((m, i) => (
+                    <li
+                      key={m.userId}
+                      className="settlement__balance-row"
+                      style={{ ['--stagger' as string]: String(i) } as CSSProperties}
+                    >
                       <span className="settlement__party">
                         {personLabel(m.email, m.displayName)}
                       </span>

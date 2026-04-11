@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { createTravel, fetchTravels } from '../api/travels'
 import type { TravelListItem } from '../api/types'
@@ -152,9 +152,12 @@ export function TravelListPage() {
                   </p>
                 </div>
               ) : (
-                <ul className="travel-list__items">
-                  {travels.map((t) => (
-                    <li key={t.id}>
+                <ul className="travel-list__items motion-list">
+                  {travels.map((t, i) => (
+                    <li
+                      key={t.id}
+                      style={{ ['--stagger' as string]: String(i) } as CSSProperties}
+                    >
                       <Link className="travel-list__link" to={`/travels/${t.id}`}>
                         <span className="travel-list__link-name">{t.name}</span>
                         <span
