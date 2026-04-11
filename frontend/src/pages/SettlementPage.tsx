@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   fetchTravel,
@@ -68,6 +68,25 @@ function SettlementContent({ travelId }: { travelId: string }) {
   const blockedAllFinished =
     st === 'allFinished' && preview && !summary && transfers.length === 0
 
+  const settlementResolved =
+    !settlementLoading && !settlementError && settlement !== null
+
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+
+  const copyTransferAmount = useCallback(
+    async (amountTry: number, key: string) => {
+      const text = formatTry(amountTry)
+      try {
+        await navigator.clipboard.writeText(text)
+        setCopiedKey(key)
+        window.setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 2000)
+      } catch {
+        setCopiedKey(null)
+      }
+    },
+    [],
+  )
+
   return (
     <main className="settlement__main">
       <nav className="settlement__crumb" aria-label="Breadcrumb">
@@ -92,6 +111,30 @@ function SettlementContent({ travelId }: { travelId: string }) {
               {travel.name} · {travelStatusLabel(travel.status)}
             </p>
           </header>
+
+          <nav className="settlement__flow" aria-label="Settlement steps">
+            <span
+              className={`settlement__flow-step${travel ? ' settlement__flow-step--on' : ''}`}
+            >
+              Trip
+            </span>
+            <span className="settlement__flow-sep" aria-hidden="true">
+              →
+            </span>
+            <span
+              className={`settlement__flow-step${summary ? ' settlement__flow-step--on' : ''}`}
+            >
+              Balances (TRY)
+            </span>
+            <span className="settlement__flow-sep" aria-hidden="true">
+              →
+            </span>
+            <span
+              className={`settlement__flow-step${settlementResolved ? ' settlement__flow-step--on' : ''}`}
+            >
+              Who pays whom
+            </span>
+          </nav>
 
           <section className="settlement__card" aria-labelledby="sett-heading">
             <h2 id="sett-heading" className="settlement__section-title">
@@ -120,21 +163,35 @@ function SettlementContent({ travelId }: { travelId: string }) {
             ) : transfers.length === 0 ? (
               <p className="settlement__muted">Everyone is even — no transfers needed.</p>
             ) : (
-              <ul className="settlement__list">
-                {transfers.map((row, i) => (
-                  <li key={`${row.fromUserId}-${row.toUserId}-${i}`} className="settlement__row">
-                    <span className="settlement__party">
-                      {personLabel(row.fromEmail, row.fromDisplayName)}
-                    </span>
-                    <span className="settlement__arrow" aria-hidden="true">
-                      →
-                    </span>
-                    <span className="settlement__party">
-                      {personLabel(row.toEmail, row.toDisplayName)}
-                    </span>
-                    <span className="settlement__amount">{formatTry(row.amountTry)}</span>
-                  </li>
-                ))}
+              <ul className="settlement__transfer-cards">
+                {transfers.map((row, i) => {
+                  const rowKey = `${row.fromUserId}-${row.toUserId}-${i}`
+                  return (
+                    <li key={rowKey} className="settlement__transfer-card">
+                      <div className="settlement__transfer-flow">
+                        <span className="settlement__party">
+                          {personLabel(row.fromEmail, row.fromDisplayName)}
+                        </span>
+                        <span className="settlement__arrow" aria-hidden="true">
+                          →
+                        </span>
+                        <span className="settlement__party">
+                          {personLabel(row.toEmail, row.toDisplayName)}
+                        </span>
+                      </div>
+                      <div className="settlement__transfer-footer">
+                        <span className="settlement__amount">{formatTry(row.amountTry)}</span>
+                        <button
+                          type="button"
+                          className="settlement__copy"
+                          onClick={() => copyTransferAmount(row.amountTry, rowKey)}
+                        >
+                          {copiedKey === rowKey ? 'Copied' : 'Copy TRY'}
+                        </button>
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             )}
             {!settlementLoading && !settlementError && summary ? (

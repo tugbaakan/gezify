@@ -1,3 +1,5 @@
+import type { ExpenseCategory, TravelStatus } from '../api/types'
+
 export function formatTry(amount: number): string {
   return new Intl.NumberFormat(undefined, {
     style: 'currency',
@@ -25,6 +27,36 @@ export function travelStatusLabel(status: string): string {
     settled: 'Settled',
   }
   return map[status] ?? status
+}
+
+/** Short label for status chips (travel list, detail bar). */
+export function travelStatusShort(status: TravelStatus): string {
+  const map: Record<TravelStatus, string> = {
+    active: 'Active',
+    allFinished: 'Settling',
+    settled: 'Done',
+  }
+  return map[status] ?? status
+}
+
+export type TravelStatusChipTone = 'active' | 'settling' | 'done'
+
+export function travelStatusChipTone(status: TravelStatus): TravelStatusChipTone {
+  if (status === 'active') return 'active'
+  if (status === 'allFinished') return 'settling'
+  return 'done'
+}
+
+const ALL_CATEGORIES: ExpenseCategory[] = [
+  'food',
+  'accommodation',
+  'transfer',
+  'souvenir',
+  'activity',
+]
+
+export function expenseCategoriesForFilter(): ExpenseCategory[] {
+  return ALL_CATEGORIES
 }
 
 export function invitationStatusLabel(status: string): string {

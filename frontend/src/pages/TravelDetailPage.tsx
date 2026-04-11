@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   createTravelInvitation,
@@ -8,6 +8,7 @@ import {
   fetchTravelMembers,
 } from '../api/travels'
 import type {
+  ExpenseCategory,
   ExpenseDetail,
   TravelDetail,
   TravelInvitationListItem,
@@ -16,10 +17,13 @@ import type {
 import { ApiRequestError } from '../api/client'
 import { AppLayout } from '../components/AppLayout'
 import {
+  expenseCategoriesForFilter,
   formatExpenseCategory,
   formatTry,
   invitationStatusLabel,
+  travelStatusChipTone,
   travelStatusLabel,
+  travelStatusShort,
 } from '../utils/format'
 import './TravelDetailPage.css'
 
@@ -36,6 +40,55 @@ function firstValidationDetail(err: ApiRequestError): string | null {
   return null
 }
 
+type ExpenseSort = 'date-desc' | 'date-asc' | 'try-desc' | 'try-asc'
+
+function sortExpenses(list: ExpenseDetail[], sort: ExpenseSort): ExpenseDetail[] {
+  const out = [...list]
+  switch (sort) {
+    case 'date-desc':
+      out.sort(
+        (a, b) =>
+          new Date(b.expenseDate).getTime() - new Date(a.expenseDate).getTime(),
+      )
+      break
+    case 'date-asc':
+      out.sort(
+        (a, b) =>
+          new Date(a.expenseDate).getTime() - new Date(b.expenseDate).getTime(),
+      )
+      break
+    case 'try-desc':
+      out.sort((a, b) => b.amountTry - a.amountTry)
+      break
+    case 'try-asc':
+      out.sort((a, b) => a.amountTry - b.amountTry)
+      break
+    default:
+      break
+  }
+  return out
+}
+
+function groupExpensesByLocalDay(
+  sorted: ExpenseDetail[],
+): { dayKey: string; dayLabel: string; items: ExpenseDetail[] }[] {
+  const groups: { dayKey: string; dayLabel: string; items: ExpenseDetail[] }[] = []
+  for (const e of sorted) {
+    const d = new Date(e.expenseDate)
+    const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const dayLabel = d.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+    const last = groups[groups.length - 1]
+    if (last?.dayKey === dayKey) last.items.push(e)
+    else groups.push({ dayKey, dayLabel, items: [e] })
+  }
+  return groups
+}
+
 function TravelDetailContent({ travelId }: { travelId: string }) {
   const [travel, setTravel] = useState<TravelDetail | null>(null)
   const [expenses, setExpenses] = useState<ExpenseDetail[] | null>(null)
@@ -46,6 +99,18 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
   const [inviteBusy, setInviteBusy] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
+  const [expenseSort, setExpenseSort] = useState<ExpenseSort>('date-desc')
+  const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory | 'all'>('all')
+
+  const expenseGroups = useMemo(() => {
+    if (!expenses) return []
+    const filtered =
+      expenseCategory === 'all'
+        ? expenses
+        : expenses.filter((e) => e.category === expenseCategory)
+    const sorted = sortExpenses(filtered, expenseSort)
+    return groupExpensesByLocalDay(sorted)
+  }, [expenses, expenseCategory, expenseSort])
 
   useEffect(() => {
     let cancelled = false
@@ -127,26 +192,33 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
         <p className="travel-detail__loading">Loading…</p>
       ) : (
         <>
-          <header className="travel-detail__head">
-            <div>
-              <h1 className="travel-detail__title">{travel.name}</h1>
-              <p className="travel-detail__status">{travelStatusLabel(travel.status)}</p>
+          <div className="travel-detail__sticky">
+            <div className="travel-detail__sticky-inner">
+              <div className="travel-detail__sticky-text">
+                <h1 className="travel-detail__title">{travel.name}</h1>
+                <span
+                  className={`travel-detail__status-chip travel-detail__status-chip--${travelStatusChipTone(travel.status)}`}
+                  aria-label={travelStatusLabel(travel.status)}
+                >
+                  {travelStatusShort(travel.status)}
+                </span>
+              </div>
+              <div className="travel-detail__actions">
+                <Link
+                  className="travel-detail__btn travel-detail__btn--secondary"
+                  to={`/travels/${travel.id}/settlement`}
+                >
+                  Settlement
+                </Link>
+                <Link
+                  className="travel-detail__btn travel-detail__btn--primary"
+                  to={`/travels/${travel.id}/expenses/new`}
+                >
+                  Add expense
+                </Link>
+              </div>
             </div>
-            <div className="travel-detail__actions">
-              <Link
-                className="travel-detail__btn travel-detail__btn--secondary"
-                to={`/travels/${travel.id}/settlement`}
-              >
-                Settlement
-              </Link>
-              <Link
-                className="travel-detail__btn travel-detail__btn--primary"
-                to={`/travels/${travel.id}/expenses/new`}
-              >
-                Add expense
-              </Link>
-            </div>
-          </header>
+          </div>
 
           <section
             className="travel-detail__section travel-detail__section--members"
@@ -278,46 +350,106 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
             {expenses.length === 0 ? (
               <p className="travel-detail__muted">No expenses yet.</p>
             ) : (
-              <ul className="travel-detail__expenses">
-                {expenses.map((e) => (
-                  <li key={e.id} className="travel-detail__expense">
-                    <div className="travel-detail__expense-main">
-                      <span className="travel-detail__expense-cat">
-                        {formatExpenseCategory(e.category)}
-                      </span>
-                      {e.location ? (
-                        <span className="travel-detail__expense-loc">{e.location}</span>
-                      ) : null}
+              <>
+                <div className="travel-detail__expense-toolbar">
+                  <div className="travel-detail__expense-toolbar-inner">
+                    <div className="travel-detail__toolbar-field">
+                      <label className="travel-detail__toolbar-label" htmlFor="travel-exp-sort">
+                        Sort
+                      </label>
+                      <select
+                        id="travel-exp-sort"
+                        className="travel-detail__toolbar-select"
+                        value={expenseSort}
+                        onChange={(ev) => setExpenseSort(ev.target.value as ExpenseSort)}
+                      >
+                        <option value="date-desc">Newest first</option>
+                        <option value="date-asc">Oldest first</option>
+                        <option value="try-desc">Highest TRY</option>
+                        <option value="try-asc">Lowest TRY</option>
+                      </select>
                     </div>
-                    <div className="travel-detail__expense-amounts">
-                      <span className="travel-detail__expense-original">
-                        {e.amount.toLocaleString(undefined, {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 2,
-                        })}{' '}
-                        {e.currency}
-                      </span>
-                      <span className="travel-detail__expense-try">
-                        {formatTry(e.amountTry)}
-                      </span>
+                    <div className="travel-detail__toolbar-field">
+                      <label className="travel-detail__toolbar-label" htmlFor="travel-exp-cat">
+                        Category
+                      </label>
+                      <select
+                        id="travel-exp-cat"
+                        className="travel-detail__toolbar-select"
+                        value={expenseCategory}
+                        onChange={(ev) =>
+                          setExpenseCategory(ev.target.value as ExpenseCategory | 'all')
+                        }
+                      >
+                        <option value="all">All categories</option>
+                        {expenseCategoriesForFilter().map((c) => (
+                          <option key={c} value={c}>
+                            {formatExpenseCategory(c)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    <div className="travel-detail__expense-meta">
-                      <span>
-                        Paid by:{' '}
-                        {e.paidBy
-                          ? memberLabel(e.paidBy)
-                          : '—'}
-                      </span>
-                      <span>
-                        {new Date(e.expenseDate).toLocaleString(undefined, {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                        })}
-                      </span>
+                  </div>
+                </div>
+                {expenseGroups.length === 0 ? (
+                  <p className="travel-detail__muted">No expenses match this filter.</p>
+                ) : (
+                  <div className="travel-detail__expense-groups">
+                    <div
+                      className="travel-detail__expense-column-labels"
+                      aria-hidden="true"
+                    >
+                      <span>Original</span>
+                      <span>TRY (locked)</span>
                     </div>
-                  </li>
-                ))}
-              </ul>
+                    {expenseGroups.map((g) => (
+                      <div key={g.dayKey} className="travel-detail__expense-day">
+                        <h3 className="travel-detail__day-heading">{g.dayLabel}</h3>
+                        <ul className="travel-detail__expenses">
+                          {g.items.map((e) => (
+                            <li key={e.id} className="travel-detail__expense">
+                              <div className="travel-detail__expense-main">
+                                <span className="travel-detail__expense-cat">
+                                  {formatExpenseCategory(e.category)}
+                                </span>
+                                {e.location ? (
+                                  <span className="travel-detail__expense-loc">
+                                    {e.location}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <div className="travel-detail__expense-amounts">
+                                <span className="travel-detail__expense-original">
+                                  {e.amount.toLocaleString(undefined, {
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 2,
+                                  })}{' '}
+                                  {e.currency}
+                                </span>
+                                <span className="travel-detail__expense-try">
+                                  {formatTry(e.amountTry)}
+                                </span>
+                              </div>
+                              <div className="travel-detail__expense-meta">
+                                <span>
+                                  Paid by:{' '}
+                                  {e.paidBy ? memberLabel(e.paidBy) : '—'}
+                                </span>
+                                <span>
+                                  {new Date(e.expenseDate).toLocaleString(undefined, {
+                                    dateStyle: 'medium',
+                                    timeStyle: 'short',
+                                  })}
+                                </span>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </section>
         </>

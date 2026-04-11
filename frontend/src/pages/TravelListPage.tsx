@@ -5,7 +5,11 @@ import type { TravelListItem } from '../api/types'
 import { ApiRequestError } from '../api/client'
 import { AppLayout } from '../components/AppLayout'
 import { useAuth } from '../auth/useAuth'
-import { travelStatusLabel } from '../utils/format'
+import {
+  travelStatusChipTone,
+  travelStatusLabel,
+  travelStatusShort,
+} from '../utils/format'
 import './TravelListPage.css'
 
 export function TravelListPage() {
@@ -153,8 +157,11 @@ export function TravelListPage() {
                     <li key={t.id}>
                       <Link className="travel-list__link" to={`/travels/${t.id}`}>
                         <span className="travel-list__link-name">{t.name}</span>
-                        <span className="travel-list__link-meta">
-                          {travelStatusLabel(t.status)}
+                        <span
+                          className={`travel-list__status-chip travel-list__status-chip--${travelStatusChipTone(t.status)}`}
+                          aria-label={travelStatusLabel(t.status)}
+                        >
+                          {travelStatusShort(t.status)}
                         </span>
                       </Link>
                     </li>

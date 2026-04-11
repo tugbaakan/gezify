@@ -62,72 +62,74 @@ function InviteWithToken({ token }: { token: string }) {
 
   return (
     <main className="invite__main">
-      <h1 className="invite__title">Trip invitation</h1>
+      <div className="invite__card">
+        <h1 className="invite__title">Trip invitation</h1>
 
-      {oauthFailed ? (
-        <p className="invite__warn" role="alert">
-          We could not add you to the trip after sign-in. Your Google account email may
-          not match the invitation. Open the invite link again while signed in with the
-          invited address, or ask the host to send a new invite.
-        </p>
-      ) : null}
-
-      {checking ? (
-        <p className="invite__muted">Checking invitation…</p>
-      ) : !inviteOk ? (
-        <p className="invite__error" role="alert">
-          This invitation link is invalid or has expired.
-        </p>
-      ) : (
-        <>
-          <p className="invite__lede">
-            {travelName ? (
-              <>
-                You&apos;re invited to <strong>{travelName}</strong>.
-              </>
-            ) : (
-              <>You&apos;ve been invited to a trip on Gezify.</>
-            )}
+        {oauthFailed ? (
+          <p className="invite__warn" role="alert">
+            We could not add you to the trip after sign-in. Your Google account email may
+            not match the invitation. Open the invite link again while signed in with the
+            invited address, or ask the host to send a new invite.
           </p>
+        ) : null}
 
-          {!ready ? (
-            <p className="invite__muted">Loading…</p>
-          ) : !user ? (
-            <div className="invite__actions">
-              <p className="invite__hint">
-                Sign in with the Google account that received the invitation email.
-              </p>
-              <button
-                type="button"
-                className="invite__primary"
-                onClick={() => signInWithGoogle({ pendingInviteToken: token })}
-              >
-                Sign in with Google
-              </button>
-            </div>
-          ) : (
-            <div className="invite__actions">
-              {acceptError ? (
-                <p className="invite__error" role="alert">
-                  {acceptError}
+        {checking ? (
+          <p className="invite__muted">Checking invitation…</p>
+        ) : !inviteOk ? (
+          <p className="invite__error" role="alert">
+            This invitation link is invalid or has expired.
+          </p>
+        ) : (
+          <>
+            <p className="invite__lede">
+              {travelName ? (
+                <>
+                  You&apos;re invited to <strong>{travelName}</strong>.
+                </>
+              ) : (
+                <>You&apos;ve been invited to a trip on Gezify.</>
+              )}
+            </p>
+
+            {!ready ? (
+              <p className="invite__muted">Loading…</p>
+            ) : !user ? (
+              <div className="invite__actions">
+                <p className="invite__hint">
+                  Sign in with the Google account that received the invitation email.
                 </p>
-              ) : null}
-              <button
-                type="button"
-                className="invite__primary"
-                disabled={accepting}
-                onClick={onAccept}
-              >
-                {accepting ? 'Joining…' : 'Join this trip'}
-              </button>
-            </div>
-          )}
+                <button
+                  type="button"
+                  className="invite__primary"
+                  onClick={() => signInWithGoogle({ pendingInviteToken: token })}
+                >
+                  Sign in with Google
+                </button>
+              </div>
+            ) : (
+              <div className="invite__actions">
+                {acceptError ? (
+                  <p className="invite__error" role="alert">
+                    {acceptError}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  className="invite__primary"
+                  disabled={accepting}
+                  onClick={onAccept}
+                >
+                  {accepting ? 'Joining…' : 'Join this trip'}
+                </button>
+              </div>
+            )}
 
-          <p className="invite__back">
-            <Link to="/">Back to Gezify</Link>
-          </p>
-        </>
-      )}
+            <p className="invite__back">
+              <Link to="/">Back to Gezify</Link>
+            </p>
+          </>
+        )}
+      </div>
     </main>
   )
 }
@@ -140,13 +142,15 @@ export function InvitePage() {
     <AppLayout>
       {!token ? (
         <main className="invite__main">
-          <h1 className="invite__title">Trip invitation</h1>
-          <p className="invite__error" role="alert">
-            This invitation link is invalid or has expired.
-          </p>
-          <p className="invite__back">
-            <Link to="/">Back to Gezify</Link>
-          </p>
+          <div className="invite__card">
+            <h1 className="invite__title">Trip invitation</h1>
+            <p className="invite__error" role="alert">
+              This invitation link is invalid or has expired.
+            </p>
+            <p className="invite__back">
+              <Link to="/">Back to Gezify</Link>
+            </p>
+          </div>
         </main>
       ) : (
         <InviteWithToken key={token} token={token} />

@@ -8,8 +8,22 @@
 }
 
 .auth-callback__card {
+  width: 100%;
   max-width: 22rem;
+  margin: 0 auto;
+  padding: 1.75rem 1.35rem;
   text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  box-sizing: border-box;
+}
+
+@media (min-width: 480px) {
+  .auth-callback__card {
+    padding: 2rem 1.75rem;
+  }
 }
 
 .auth-callback__message {
@@ -19,17 +33,11 @@
 }
 
 .auth-callback__link {
-  color: var(--page-accent-text, #0f766e);
+  color: var(--accent-text);
   font-weight: 500;
   text-decoration: none;
 }
 
 .auth-callback__link:hover {
   text-decoration: underline;
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-callback__link {
-    color: #5eead4;
-  }
 }
