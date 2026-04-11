@@ -1,9 +1,17 @@
-import { useCallback, useEffect, useState, type CSSProperties } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type CSSProperties,
+} from 'react'
 import { Link } from 'react-router-dom'
 import { createTravel, fetchTravels } from '../api/travels'
 import type { TravelListItem } from '../api/types'
 import { ApiRequestError } from '../api/client'
+import { ApiErrorBanner } from '../components/ApiErrorBanner'
 import { AppLayout } from '../components/AppLayout'
+import { TravelListSkeleton } from '../components/TravelListSkeleton'
 import { useAuth } from '../auth/useAuth'
 import {
   travelStatusChipTone,
@@ -15,27 +23,40 @@ import './TravelListPage.css'
 export function TravelListPage() {
   const { user, ready, signInWithGoogle } = useAuth()
   const [travels, setTravels] = useState<TravelListItem[] | null>(null)
-  const [listError, setListError] = useState<string | null>(null)
+  const [listLoading, setListLoading] = useState(false)
+  const [listError, setListError] = useState<ApiRequestError | string | null>(null)
   const [newName, setNewName] = useState('')
   const [creating, setCreating] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
+  const [createError, setCreateError] = useState<ApiRequestError | string | null>(null)
 
   const loadTravels = useCallback(() => {
     if (!user) return
+    setListError(null)
+    setListLoading(true)
     fetchTravels()
       .then((data) => {
-        setListError(null)
         setTravels(data)
       })
       .catch((e: unknown) => {
-        setTravels([])
-        if (e instanceof ApiRequestError) setListError(e.message)
-        else setListError('Could not load travels.')
+        if (e instanceof ApiRequestError) setListError(e)
+        else setListError('Geziler yüklenemedi.')
       })
+      .finally(() => setListLoading(false))
   }, [user])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!ready || !user) return
+    setListLoading(true)
+  }, [ready, user])
+
+  useEffect(() => {
+    if (!ready) return
+    if (!user) {
+      setListLoading(false)
+      setTravels(null)
+      setListError(null)
+      return
+    }
     loadTravels()
   }, [ready, user, loadTravels])
 
@@ -51,8 +72,8 @@ export function TravelListPage() {
         loadTravels()
       })
       .catch((err: unknown) => {
-        if (err instanceof ApiRequestError) setCreateError(err.message)
-        else setCreateError('Could not create travel.')
+        if (err instanceof ApiRequestError) setCreateError(err)
+        else setCreateError('Gezi oluşturulamadı.')
       })
       .finally(() => setCreating(false))
   }
@@ -130,28 +151,24 @@ export function TravelListPage() {
                   </button>
                 </div>
                 {createError ? (
-                  <p className="travel-list__error" role="alert">
-                    {createError}
-                  </p>
+                  <ApiErrorBanner className="travel-list__banner" error={createError} />
                 ) : null}
               </form>
 
               {listError ? (
-                <p className="travel-list__error" role="alert">
-                  {listError}
-                </p>
+                <ApiErrorBanner className="travel-list__banner" error={listError} />
               ) : null}
 
-              {travels === null ? (
-                <p className="travel-list__loading">Loading travels…</p>
-              ) : travels.length === 0 ? (
+              {listLoading && travels === null ? (
+                <TravelListSkeleton />
+              ) : !listError && travels !== null && travels.length === 0 ? (
                 <div className="travel-list__empty" role="status">
-                  <p className="travel-list__empty-title">No travels yet</p>
+                  <p className="travel-list__empty-title">Henüz gezi yok</p>
                   <p className="travel-list__empty-copy">
-                    Create a trip above to start tracking shared expenses.
+                    Yukarıdan yeni bir gezi oluşturarak ortak giderleri takip etmeye başla.
                   </p>
                 </div>
-              ) : (
+              ) : !listError && travels !== null && travels.length > 0 ? (
                 <ul className="travel-list__items motion-list">
                   {travels.map((t, i) => (
                     <li
@@ -170,7 +187,7 @@ export function TravelListPage() {
                     </li>
                   ))}
                 </ul>
-              )}
+              ) : null}
             </section>
           </>
         )}

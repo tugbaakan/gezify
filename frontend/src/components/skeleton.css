@@ -1,0 +1,18 @@
+@keyframes gf-skeleton-pulse {
+  50% {
+    opacity: 0.52;
+  }
+}
+
+.gf-skel {
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 14%, var(--border));
+  animation: gf-skeleton-pulse 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gf-skel {
+    animation: none;
+    opacity: 0.65;
+  }
+}

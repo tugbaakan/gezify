@@ -244,3 +244,57 @@
 .settlement__back a:hover {
   text-decoration: underline;
 }
+
+.settlement__banner {
+  margin-bottom: 1rem;
+}
+
+@keyframes settlement-skel-pulse {
+  50% {
+    opacity: 0.52;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settlement__transfer-skel-line,
+  .settlement__transfer-skel-amt {
+    animation: none;
+    opacity: 0.65;
+  }
+}
+
+.settlement__transfer-skel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.settlement__transfer-skel-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.settlement__transfer-skel-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.settlement__transfer-skel-line {
+  height: 0.95rem;
+  max-width: 100%;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 14%, var(--border));
+  animation: settlement-skel-pulse 1.1s ease-in-out infinite;
+}
+
+.settlement__transfer-skel-amt {
+  height: 0.85rem;
+  max-width: 8rem;
+  margin-left: auto;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 14%, var(--border));
+  animation: settlement-skel-pulse 1.1s ease-in-out infinite;
+}

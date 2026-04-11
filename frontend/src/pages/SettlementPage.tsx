@@ -7,7 +7,9 @@ import {
 } from '../api/travels'
 import type { TravelDetail } from '../api/types'
 import { ApiRequestError } from '../api/client'
+import { ApiErrorBanner } from '../components/ApiErrorBanner'
 import { AppLayout } from '../components/AppLayout'
+import { SettlementSkeleton } from '../components/SettlementSkeleton'
 import { formatTry, travelStatusLabel } from '../utils/format'
 import './SettlementPage.css'
 
@@ -17,10 +19,12 @@ function personLabel(email: string, displayName: string | null) {
 
 function SettlementContent({ travelId }: { travelId: string }) {
   const [travel, setTravel] = useState<TravelDetail | null>(null)
-  const [travelError, setTravelError] = useState<string | null>(null)
+  const [travelError, setTravelError] = useState<ApiRequestError | string | null>(null)
   const [settlement, setSettlement] = useState<SettlementResponse | null>(null)
   const [settlementLoading, setSettlementLoading] = useState(true)
-  const [settlementError, setSettlementError] = useState<string | null>(null)
+  const [settlementError, setSettlementError] = useState<ApiRequestError | string | null>(
+    null,
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -34,8 +38,8 @@ function SettlementContent({ travelId }: { travelId: string }) {
       })
       .catch((e: unknown) => {
         if (!cancelled) {
-          if (e instanceof ApiRequestError) setTravelError(e.message)
-          else setTravelError('Could not load trip.')
+          if (e instanceof ApiRequestError) setTravelError(e)
+          else setTravelError('Gezi yüklenemedi.')
         }
       })
 
@@ -48,8 +52,8 @@ function SettlementContent({ travelId }: { travelId: string }) {
       })
       .catch((e: unknown) => {
         if (!cancelled) {
-          if (e instanceof ApiRequestError) setSettlementError(e.message)
-          else setSettlementError('Could not load settlement.')
+          if (e instanceof ApiRequestError) setSettlementError(e)
+          else setSettlementError('Ödeme özeti yüklenemedi.')
         }
       })
       .finally(() => {
@@ -98,11 +102,9 @@ function SettlementContent({ travelId }: { travelId: string }) {
       </nav>
 
       {travelError ? (
-        <p className="settlement__error" role="alert">
-          {travelError}
-        </p>
+        <ApiErrorBanner className="settlement__banner" error={travelError} />
       ) : !travel ? (
-        <p className="settlement__loading">Loading…</p>
+        <SettlementSkeleton />
       ) : (
         <>
           <header className="settlement__head">
@@ -144,11 +146,16 @@ function SettlementContent({ travelId }: { travelId: string }) {
               ) : null}
             </h2>
             {settlementLoading ? (
-              <p className="settlement__muted">Loading settlement…</p>
+              <ul className="settlement__transfer-skel" aria-busy="true">
+                {[0, 1, 2].map((i) => (
+                  <li key={i} className="settlement__transfer-skel-row">
+                    <span className="settlement__transfer-skel-line" />
+                    <span className="settlement__transfer-skel-amt" />
+                  </li>
+                ))}
+              </ul>
             ) : settlementError ? (
-              <p className="settlement__warn" role="alert">
-                {settlementError}
-              </p>
+              <ApiErrorBanner error={settlementError} />
             ) : st === 'active' && transfers.length === 0 ? (
               <p className="settlement__muted">
                 No settlement transfers yet. When everyone has finished the trip and
@@ -245,7 +252,7 @@ export function SettlementPage() {
     <AppLayout>
       {!travelId ? (
         <main className="settlement__main">
-          <p className="settlement__error">Missing trip id.</p>
+          <ApiErrorBanner error="Gezi kimliği eksik." />
         </main>
       ) : (
         <SettlementContent key={travelId} travelId={travelId} />

@@ -576,3 +576,35 @@
     color: var(--text);
   }
 }
+
+.travel-detail__banner {
+  margin-bottom: 1rem;
+}
+
+.travel-detail__empty-card {
+  margin-top: 0.5rem;
+  padding: 1.75rem 1.25rem 2rem;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg) 94%, var(--accent) 6%);
+}
+
+.travel-detail__empty-title {
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.travel-detail__empty-copy {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0 auto 1rem;
+  max-width: 30ch;
+}
+
+.travel-detail__empty-cta {
+  margin-top: 0.25rem;
+}

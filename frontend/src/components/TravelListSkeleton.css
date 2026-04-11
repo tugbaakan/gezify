@@ -1,0 +1,26 @@
+.travel-list-skel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.travel-list-skel__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.travel-list-skel__name {
+  flex: 1;
+  height: 1rem;
+  max-width: 14rem;
+}
+
+.travel-list-skel__chip {
+  width: 3.25rem;
+  height: 1.65rem;
+  border-radius: 999px;
+}

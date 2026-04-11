@@ -4,7 +4,9 @@ import { createExpense, patchExpensePayer } from '../api/expenses'
 import { fetchTravelMembers } from '../api/travels'
 import type { ExpenseCategory, ExpenseDetail, TravelMember } from '../api/types'
 import { ApiRequestError } from '../api/client'
+import { ApiErrorBanner } from '../components/ApiErrorBanner'
 import { AppLayout } from '../components/AppLayout'
+import { ExpenseFormSkeleton } from '../components/ExpenseFormSkeleton'
 import { useAuth } from '../auth/useAuth'
 import './NewExpensePage.css'
 
@@ -36,7 +38,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
   const currencyFieldId = useId()
 
   const [members, setMembers] = useState<TravelMember[] | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<ApiRequestError | string | null>(null)
 
   const [category, setCategory] = useState<ExpenseCategory>('food')
   const [location, setLocation] = useState('')
@@ -46,7 +48,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
 
   const [createdExpense, setCreatedExpense] = useState<ExpenseDetail | null>(null)
   const [payerId, setPayerId] = useState<string | null>(null)
-  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<ApiRequestError | string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -63,8 +65,8 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
       })
       .catch((e: unknown) => {
         if (!cancelled) {
-          if (e instanceof ApiRequestError) setLoadError(e.message)
-          else setLoadError('Could not load members.')
+          if (e instanceof ApiRequestError) setLoadError(e)
+          else setLoadError('Üyeler yüklenemedi.')
         }
       })
 
@@ -127,8 +129,8 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
         setPayerId(defaultPayer)
       })
       .catch((err: unknown) => {
-        if (err instanceof ApiRequestError) setSubmitError(err.message)
-        else setSubmitError('Could not save expense.')
+        if (err instanceof ApiRequestError) setSubmitError(err)
+        else setSubmitError('Gider kaydedilemedi.')
       })
       .finally(() => setSubmitting(false))
   }
@@ -141,8 +143,8 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
     patchExpensePayer(createdExpense.id, payerId)
       .then(() => navigate(`/travels/${travelId}`, { replace: true }))
       .catch((err: unknown) => {
-        if (err instanceof ApiRequestError) setSubmitError(err.message)
-        else setSubmitError('Could not set payer.')
+        if (err instanceof ApiRequestError) setSubmitError(err)
+        else setSubmitError('Ödeyen kaydedilemedi.')
       })
       .finally(() => setSubmitting(false))
   }
@@ -157,13 +159,11 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
         <span>New expense</span>
       </nav>
 
-      {loadError ? (
-        <p className="new-expense__error" role="alert">
-          {loadError}
-        </p>
-      ) : null}
+      {loadError ? <ApiErrorBanner className="new-expense__banner" error={loadError} /> : null}
 
-      {!createdExpense ? (
+      {!createdExpense && loadError ? null : !createdExpense && members === null ? (
+        <ExpenseFormSkeleton />
+      ) : !createdExpense ? (
         <form className="new-expense__form" onSubmit={onCreateSubmit}>
           <h1 className="new-expense__title">New expense</h1>
 
@@ -260,9 +260,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
           </label>
 
           {submitError ? (
-            <p className="new-expense__error" role="alert">
-              {submitError}
-            </p>
+            <ApiErrorBanner className="new-expense__form-banner" error={submitError} />
           ) : null}
 
           <div className="new-expense__actions">
@@ -320,9 +318,7 @@ function NewExpenseContent({ travelId }: { travelId: string }) {
                 </fieldset>
 
                 {submitError ? (
-                  <p className="new-expense__error" role="alert">
-                    {submitError}
-                  </p>
+                  <ApiErrorBanner className="new-expense__form-banner" error={submitError} />
                 ) : null}
               </div>
 
@@ -358,7 +354,7 @@ export function NewExpensePage() {
     <AppLayout>
       {!travelId ? (
         <main className="new-expense__main">
-          <p className="new-expense__error">Missing trip id.</p>
+          <ApiErrorBanner error="Gezi kimliği eksik." />
         </main>
       ) : (
         <NewExpenseContent key={travelId} travelId={travelId} />

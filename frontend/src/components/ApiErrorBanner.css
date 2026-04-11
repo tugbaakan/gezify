@@ -1,0 +1,50 @@
+.api-error-banner {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--api-banner-border, var(--border));
+  background: var(--api-banner-bg, color-mix(in srgb, var(--bg) 94%, var(--accent) 6%));
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.api-error-banner__title {
+  display: block;
+  margin: 0 0 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.api-error-banner__body {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.api-error-banner--danger {
+  --api-banner-border: color-mix(in srgb, #b91c1c 35%, var(--border));
+  --api-banner-bg: color-mix(in srgb, #fef2f2 55%, var(--bg));
+}
+
+.api-error-banner--warning {
+  --api-banner-border: color-mix(in srgb, #b45309 38%, var(--border));
+  --api-banner-bg: color-mix(in srgb, var(--accent-secondary) 22%, var(--bg));
+}
+
+.api-error-banner--info {
+  --api-banner-border: color-mix(in srgb, var(--accent) 28%, var(--border));
+  --api-banner-bg: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}
+
+@media (prefers-color-scheme: dark) {
+  .api-error-banner--danger {
+    --api-banner-border: color-mix(in srgb, #fca5a5 45%, var(--border));
+    --api-banner-bg: color-mix(in srgb, #450a0a 55%, var(--bg));
+  }
+
+  .api-error-banner--warning {
+    --api-banner-border: color-mix(in srgb, #fbbf24 35%, var(--border));
+    --api-banner-bg: color-mix(in srgb, #422006 40%, var(--bg));
+  }
+}

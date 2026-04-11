@@ -21,7 +21,10 @@ import type {
   TravelMember,
 } from '../api/types'
 import { ApiRequestError } from '../api/client'
+import { ApiErrorBanner } from '../components/ApiErrorBanner'
 import { AppLayout } from '../components/AppLayout'
+import { TravelDetailSkeleton } from '../components/TravelDetailSkeleton'
+import { firstValidationDetailMessage } from '../utils/apiErrorDisplay'
 import {
   expenseCategoriesForFilter,
   formatExpenseCategory,
@@ -35,15 +38,6 @@ import './TravelDetailPage.css'
 
 function memberLabel(actor: { displayName: string | null; email: string }) {
   return actor.displayName?.trim() || actor.email
-}
-
-function firstValidationDetail(err: ApiRequestError): string | null {
-  const d = err.body?.error.details
-  if (!d) return null
-  for (const msgs of Object.values(d)) {
-    if (msgs?.[0]) return msgs[0]
-  }
-  return null
 }
 
 type ExpenseSort = 'date-desc' | 'date-asc' | 'try-desc' | 'try-asc'
@@ -100,7 +94,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
   const [expenses, setExpenses] = useState<ExpenseDetail[] | null>(null)
   const [members, setMembers] = useState<TravelMember[] | null>(null)
   const [invitations, setInvitations] = useState<TravelInvitationListItem[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<ApiRequestError | string | null>(null)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteBusy, setInviteBusy] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
@@ -138,8 +132,8 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
       })
       .catch((e: unknown) => {
         if (!cancelled) {
-          if (e instanceof ApiRequestError) setError(e.message)
-          else setError('Could not load this trip.')
+          if (e instanceof ApiRequestError) setError(e)
+          else setError('Gezi yüklenemedi.')
         }
       })
 
@@ -170,7 +164,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
       setInviteEmail('')
     } catch (e: unknown) {
       if (e instanceof ApiRequestError) {
-        const detail = firstValidationDetail(e)
+        const detail = firstValidationDetailMessage(e)
         setInviteError(detail ?? e.message)
       } else {
         setInviteError('Could not send invitation.')
@@ -191,11 +185,9 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
       </nav>
 
       {error ? (
-        <p className="travel-detail__error" role="alert">
-          {error}
-        </p>
+        <ApiErrorBanner className="travel-detail__banner" error={error} />
       ) : !travel || !expenses || !members || !invitations ? (
-        <p className="travel-detail__loading">Loading…</p>
+        <TravelDetailSkeleton />
       ) : (
         <>
           <div className="travel-detail__sticky">
@@ -298,7 +290,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                 Invitations
               </h3>
               {invitations.length === 0 ? (
-                <p className="travel-detail__muted">No invitations yet.</p>
+                <p className="travel-detail__muted">Henüz davet yok.</p>
               ) : (
                 <div
                   className="travel-detail__table-scroll"
@@ -358,7 +350,18 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
               Expenses
             </h2>
             {expenses.length === 0 ? (
-              <p className="travel-detail__muted">No expenses yet.</p>
+              <div className="travel-detail__empty-card" role="status">
+                <p className="travel-detail__empty-title">Henüz gider yok</p>
+                <p className="travel-detail__empty-copy">
+                  İlk harcamayı ekleyerek gruptaki payları hesaplamaya başlayın.
+                </p>
+                <Link
+                  className="travel-detail__btn travel-detail__btn--primary travel-detail__empty-cta"
+                  to={`/travels/${travel.id}/expenses/new`}
+                >
+                  Gider ekle
+                </Link>
+              </div>
             ) : (
               <>
                 <div className="travel-detail__expense-toolbar">
@@ -402,7 +405,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                   </div>
                 </div>
                 {expenseGroups.length === 0 ? (
-                  <p className="travel-detail__muted">No expenses match this filter.</p>
+                  <p className="travel-detail__muted">Bu filtreye uyan gider yok.</p>
                 ) : (
                   <div className="travel-detail__expense-groups">
                     <div
@@ -481,7 +484,7 @@ export function TravelDetailPage() {
     <AppLayout>
       {!id ? (
         <main className="travel-detail__main">
-          <p className="travel-detail__error">Missing trip id.</p>
+          <ApiErrorBanner error="Gezi kimliği eksik." />
         </main>
       ) : (
         <TravelDetailContent key={id} travelId={id} />

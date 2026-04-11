@@ -328,6 +328,14 @@
   }
 }
 
+.new-expense__banner {
+  margin-bottom: 1rem;
+}
+
+.new-expense__form-banner {
+  margin: 0.75rem 0 0;
+}
+
 .new-expense__actions {
   display: flex;
   flex-wrap: wrap;

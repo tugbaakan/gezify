@@ -1,0 +1,130 @@
+.travel-detail-skel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.travel-detail-skel__crumb {
+  width: 8rem;
+  height: 0.875rem;
+  margin-bottom: 1.25rem;
+  border-radius: 6px;
+}
+
+.travel-detail-skel__sticky {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0 -1.25rem 1.5rem;
+  padding: 0.75rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@media (min-width: 640px) {
+  .travel-detail-skel__sticky {
+    margin: 0 -2rem 1.75rem;
+    padding: 0.85rem 2rem 1.1rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.travel-detail-skel__title {
+  height: 1.65rem;
+  max-width: 16rem;
+  width: 100%;
+}
+
+.travel-detail-skel__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.travel-detail-skel__btn {
+  display: inline-block;
+  width: 5.5rem;
+  height: 2.25rem;
+  border-radius: 10px;
+}
+
+.travel-detail-skel__section {
+  margin-bottom: 2rem;
+}
+
+.travel-detail-skel__h2 {
+  height: 1.2rem;
+  max-width: 8rem;
+  margin-bottom: 1rem;
+}
+
+.travel-detail-skel__member {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.travel-detail-skel__line {
+  display: block;
+  height: 0.8rem;
+  max-width: 12rem;
+}
+
+.travel-detail-skel__line--short {
+  max-width: 9rem;
+}
+
+.travel-detail-skel__exp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.travel-detail-skel__select {
+  width: 8.5rem;
+  height: 2.25rem;
+  border-radius: 10px;
+}
+
+.travel-detail-skel__day {
+  height: 1rem;
+  max-width: 11rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.travel-detail-skel__exp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.travel-detail-skel__exp-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.travel-detail-skel__exp-main {
+  height: 0.95rem;
+  max-width: 70%;
+}
+
+.travel-detail-skel__exp-amt {
+  height: 0.85rem;
+  max-width: 40%;
+  margin-left: auto;
+}
+
+.travel-detail-skel__exp-meta {
+  height: 0.75rem;
+  max-width: 85%;
+}

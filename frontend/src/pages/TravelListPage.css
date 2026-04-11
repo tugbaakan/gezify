@@ -124,16 +124,13 @@
   cursor: not-allowed;
 }
 
-.travel-list__error {
-  margin: 0.75rem 0 0;
-  font-size: 0.875rem;
-  color: #b91c1c;
+.travel-list__banner {
+  margin-left: 1.25rem;
+  margin-right: 1.25rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .travel-list__error {
-    color: #fca5a5;
-  }
+.travel-list__banner:first-of-type {
+  margin-top: 0.5rem;
 }
 
 .travel-list__empty {
