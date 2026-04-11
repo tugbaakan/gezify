@@ -31,7 +31,7 @@
   --focus-ring-offset: 2px;
 
   --sans: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --heading: 'Carter One', 'Trebuchet MS', sans-serif;
+  --heading: 'Corben', Georgia, 'Times New Roman', serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 400 18px/1.55 var(--sans);
