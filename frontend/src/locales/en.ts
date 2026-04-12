@@ -81,6 +81,8 @@ export const en = {
     sortTryAsc: 'Lowest TRY',
     category: 'Category',
     allCategories: 'All categories',
+    paidByMember: 'Paid by',
+    allMembers: 'All members',
     noMatchFilter: 'No expenses match this filter.',
     columnOriginal: 'Original',
     columnTry: 'TRY (locked)',

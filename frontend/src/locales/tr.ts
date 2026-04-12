@@ -83,6 +83,8 @@ export const tr = {
     sortTryAsc: 'En düşük TRY',
     category: 'Kategori',
     allCategories: 'Tüm kategoriler',
+    paidByMember: 'Ödeyen',
+    allMembers: 'Tüm üyeler',
     noMatchFilter: 'Bu filtreye uyan harcama yok.',
     columnOriginal: 'Orijinal',
     columnTry: 'TRY (kilitli)',

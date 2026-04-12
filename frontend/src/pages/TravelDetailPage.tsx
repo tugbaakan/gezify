@@ -6,8 +6,13 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { fetchTravel, fetchTravelExpenses } from '../api/travels'
-import type { ExpenseCategory, ExpenseDetail, TravelDetail } from '../api/types'
+import { fetchTravel, fetchTravelExpenses, fetchTravelMembers } from '../api/travels'
+import type {
+  ExpenseCategory,
+  ExpenseDetail,
+  TravelDetail,
+  TravelMember,
+} from '../api/types'
 import { ApiRequestError } from '../api/client'
 import { ApiErrorBanner } from '../components/ApiErrorBanner'
 import { AppLayout } from '../components/AppLayout'
@@ -82,29 +87,39 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
   const locale = i18next.language
   const [travel, setTravel] = useState<TravelDetail | null>(null)
   const [expenses, setExpenses] = useState<ExpenseDetail[] | null>(null)
+  const [members, setMembers] = useState<TravelMember[] | null>(null)
   const [error, setError] = useState<ApiRequestError | string | null>(null)
   const [expenseSort, setExpenseSort] = useState<ExpenseSort>('date-desc')
   const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory | 'all'>('all')
+  const [expensePaidByMemberId, setExpensePaidByMemberId] = useState<string | 'all'>('all')
 
   const expenseGroups = useMemo(() => {
     if (!expenses) return []
-    const filtered =
-      expenseCategory === 'all'
-        ? expenses
-        : expenses.filter((e) => e.category === expenseCategory)
+    const filtered = expenses.filter((e) => {
+      if (expenseCategory !== 'all' && e.category !== expenseCategory) return false
+      if (expensePaidByMemberId !== 'all') {
+        if (!e.paidBy || e.paidBy.id !== expensePaidByMemberId) return false
+      }
+      return true
+    })
     const sorted = sortExpenses(filtered, expenseSort)
     return groupExpensesByLocalDay(sorted, locale)
-  }, [expenses, expenseCategory, expenseSort, locale])
+  }, [expenses, expenseCategory, expensePaidByMemberId, expenseSort, locale])
 
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([fetchTravel(travelId), fetchTravelExpenses(travelId)])
-      .then(([tr, ex]) => {
+    Promise.all([
+      fetchTravel(travelId),
+      fetchTravelExpenses(travelId),
+      fetchTravelMembers(travelId),
+    ])
+      .then(([tr, ex, mem]) => {
         if (!cancelled) {
           setError(null)
           setTravel(tr)
           setExpenses(ex)
+          setMembers(mem)
         }
       })
       .catch((e: unknown) => {
@@ -131,7 +146,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
 
       {error ? (
         <ApiErrorBanner className="travel-detail__banner" error={error} />
-      ) : !travel || !expenses ? (
+      ) : !travel || !expenses || !members ? (
         <TravelDetailSkeleton />
       ) : (
         <>
@@ -220,6 +235,28 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                         {expenseCategoriesForFilter().map((c) => (
                           <option key={c} value={c}>
                             {formatExpenseCategory(c)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="travel-detail__toolbar-field">
+                      <label className="travel-detail__toolbar-label" htmlFor="travel-exp-paid-by">
+                        {t('travelDetail.paidByMember')}
+                      </label>
+                      <select
+                        id="travel-exp-paid-by"
+                        className="travel-detail__toolbar-select"
+                        value={expensePaidByMemberId}
+                        onChange={(ev) =>
+                          setExpensePaidByMemberId(
+                            ev.target.value === 'all' ? 'all' : ev.target.value,
+                          )
+                        }
+                      >
+                        <option value="all">{t('travelDetail.allMembers')}</option>
+                        {members.map((m) => (
+                          <option key={m.userId} value={m.userId}>
+                            {memberLabel(m)}
                           </option>
                         ))}
                       </select>
