@@ -32,6 +32,38 @@ public static class TravelEndpoints
         return group;
     }
 
+    private static async Task<TravelDetailDto> BuildTravelDetailDtoAsync(
+        ApplicationDbContext db,
+        Guid travelId,
+        Guid requestingUserId,
+        Travel travel,
+        CancellationToken cancellationToken)
+    {
+        var memberCount = await db.TravelMembers
+            .AsNoTracking()
+            .CountAsync(m => m.TravelId == travelId, cancellationToken);
+
+        var youHaveAcked = await db.FinishedAcks.AsNoTracking()
+            .AnyAsync(a => a.TravelId == travelId && a.UserId == requestingUserId, cancellationToken);
+
+        var finishedAckCount = await db.FinishedAcks.AsNoTracking()
+            .CountAsync(
+                a => a.TravelId == travelId
+                    && db.TravelMembers.Any(m => m.TravelId == travelId && m.UserId == a.UserId),
+                cancellationToken);
+
+        return new TravelDetailDto(
+            travel.Id,
+            travel.Name,
+            travel.Status,
+            travel.CreatedAt,
+            travel.SettledAt,
+            travel.CreatedById,
+            youHaveAcked,
+            finishedAckCount,
+            memberCount);
+    }
+
     private static async Task<IResult> ListTravelsAsync(
         HttpContext httpContext,
         ApplicationDbContext db,
@@ -89,7 +121,16 @@ public static class TravelEndpoints
         });
         await db.SaveChangesAsync(cancellationToken);
 
-        var dto = new TravelDetailDto(travel.Id, travel.Name, travel.Status, travel.CreatedAt, travel.SettledAt, travel.CreatedById);
+        var dto = new TravelDetailDto(
+            travel.Id,
+            travel.Name,
+            travel.Status,
+            travel.CreatedAt,
+            travel.SettledAt,
+            travel.CreatedById,
+            YouHaveAcked: false,
+            FinishedAckCount: 0,
+            MemberCount: 1);
         return Results.Created($"/travels/{travel.Id}", dto);
     }
 
@@ -112,7 +153,8 @@ public static class TravelEndpoints
         if (travel is null)
             return Results.Json(ApiErrors.NotFound("Travel not found."), statusCode: StatusCodes.Status404NotFound);
 
-        return Results.Ok(new TravelDetailDto(travel.Id, travel.Name, travel.Status, travel.CreatedAt, travel.SettledAt, travel.CreatedById));
+        var dto = await BuildTravelDetailDtoAsync(db, travelId, userId.Value, travel, cancellationToken);
+        return Results.Ok(dto);
     }
 
     private static async Task<IResult> PatchTravelAsync(
@@ -147,7 +189,8 @@ public static class TravelEndpoints
         travel.Name = body.Name.Trim();
         await db.SaveChangesAsync(cancellationToken);
 
-        return Results.Ok(new TravelDetailDto(travel.Id, travel.Name, travel.Status, travel.CreatedAt, travel.SettledAt, travel.CreatedById));
+        var dto = await BuildTravelDetailDtoAsync(db, travelId, userId.Value, travel, cancellationToken);
+        return Results.Ok(dto);
     }
 
     private static async Task<IResult> GetSettlementAsync(
@@ -655,7 +698,10 @@ public sealed record TravelDetailDto(
     TravelStatus Status,
     DateTimeOffset CreatedAt,
     DateTimeOffset? SettledAt,
-    Guid CreatedById);
+    Guid CreatedById,
+    bool YouHaveAcked,
+    int FinishedAckCount,
+    int MemberCount);
 
 public sealed record CreateTravelRequest(string? Name);
 

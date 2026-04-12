@@ -3,6 +3,7 @@ import type {
   ExpenseDetail,
   InvitationCreated,
   TravelDetail,
+  TravelFinishResponse,
   TravelInvitationListItem,
   TravelListItem,
   TravelMember,
@@ -78,4 +79,11 @@ export type SettlementResponse = {
 
 export function fetchTravelSettlement(travelId: string) {
   return apiFetch<SettlementResponse>(`/travels/${travelId}/settlement`)
+}
+
+export function postTravelFinish(travelId: string) {
+  return apiFetch<TravelFinishResponse>(`/travels/${travelId}/finish`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
 }

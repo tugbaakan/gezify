@@ -17,6 +17,18 @@ export type TravelListItem = {
 
 export type TravelDetail = TravelListItem & {
   createdById: string
+  /** Present when API supports GET travel finish progress. */
+  youHaveAcked?: boolean
+  finishedAckCount?: number
+  memberCount?: number
+}
+
+/** Response from POST /travels/:id/finish */
+export type TravelFinishResponse = {
+  status: TravelStatus
+  youHaveAcked: boolean
+  allMembersHaveAcked: boolean
+  yourAckedAt: string | null
 }
 
 export type TravelMember = {

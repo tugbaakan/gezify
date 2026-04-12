@@ -60,6 +60,18 @@ export const en = {
     tripFallback: 'Trip',
     openPeoplePage: 'Members & invites',
     settlement: 'Settlement',
+    viewSettlement: 'View settlement',
+    finishTrip: 'Finish trip',
+    finishTripProgress: '{{acked}} / {{total}} finished — you’re done',
+    finishConfirmTitle: 'Finish your part of this trip?',
+    finishConfirmBody:
+      'Only confirm when you’ve entered every expense you personally paid or need to split. Everyone in the group must finish before balances and who-pays-whom are finalized.',
+    finishConfirmSubmit: 'Yes, I’m done',
+    finishPartialSuccess:
+      'You’re marked as finished. When everyone else has done the same, we’ll calculate balances automatically.',
+    openSettlementPage: 'Open settlement page',
+    finishPartialDismiss: 'Got it',
+    finishFailed: 'Could not update trip status. Try again.',
     addExpense: 'Add expense',
     group: 'Group',
     inviteFriend: 'Invite a friend',

@@ -445,3 +445,142 @@
 .travel-detail__empty-cta {
   margin-top: 0.25rem;
 }
+
+.travel-detail__finish-notice {
+  margin-bottom: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: color-mix(in srgb, var(--accent-bg) 55%, var(--bg));
+}
+
+.travel-detail__finish-notice-text {
+  margin: 0 0 0.85rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-h);
+}
+
+.travel-detail__finish-notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.travel-detail__btn--compact {
+  min-height: 2.35rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8125rem;
+}
+
+/* Portal root: fixed to viewport so the dialog is not clipped or offset by .motion-route / main. */
+.travel-detail__finish-portal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.travel-detail__finish-portal .travel-detail__finish-backdrop,
+.travel-detail__finish-portal .travel-detail__finish-sheet {
+  pointer-events: auto;
+}
+
+.travel-detail__finish-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: color-mix(in srgb, #0a0a0c 55%, transparent);
+}
+
+.travel-detail__finish-sheet {
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: min(92vh, 36rem);
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.5rem 0;
+  box-sizing: border-box;
+  animation: travel-detail-finish-up 0.22s ease-out;
+}
+
+@keyframes travel-detail-finish-up {
+  from {
+    transform: translateY(12px);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (min-width: 640px) {
+  .travel-detail__finish-sheet {
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(26rem, calc(100vw - 2rem));
+    max-height: min(85vh, 32rem);
+    padding: 0;
+    animation: travel-detail-finish-in 0.2s ease-out;
+  }
+
+  @keyframes travel-detail-finish-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+.travel-detail__finish-sheet-inner {
+  border-radius: 16px 16px 0 0;
+  box-shadow: var(--shadow);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 1rem 1.15rem 1.15rem;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 640px) {
+  .travel-detail__finish-sheet-inner {
+    border-radius: 16px;
+  }
+}
+
+.travel-detail__finish-title {
+  font-family: var(--heading);
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+  color: var(--text-h);
+  letter-spacing: -0.02em;
+}
+
+.travel-detail__finish-body {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.travel-detail__finish-banner {
+  margin-bottom: 0.85rem;
+}
+
+.travel-detail__finish-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

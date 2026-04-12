@@ -1,12 +1,20 @@
 import {
+  useCallback,
   useEffect,
+  useId,
   useMemo,
   useState,
   type CSSProperties,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router-dom'
-import { fetchTravel, fetchTravelExpenses, fetchTravelMembers } from '../api/travels'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import {
+  fetchTravel,
+  fetchTravelExpenses,
+  fetchTravelMembers,
+  postTravelFinish,
+} from '../api/travels'
 import type {
   ExpenseCategory,
   ExpenseDetail,
@@ -84,6 +92,8 @@ function groupExpensesByLocalDay(
 
 function TravelDetailContent({ travelId }: { travelId: string }) {
   const { t, i18n: i18next } = useTranslation()
+  const navigate = useNavigate()
+  const finishDialogTitleId = useId()
   const locale = i18next.language
   const [travel, setTravel] = useState<TravelDetail | null>(null)
   const [expenses, setExpenses] = useState<ExpenseDetail[] | null>(null)
@@ -92,6 +102,26 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
   const [expenseSort, setExpenseSort] = useState<ExpenseSort>('date-desc')
   const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory | 'all'>('all')
   const [expensePaidByMemberId, setExpensePaidByMemberId] = useState<string | 'all'>('all')
+  const [finishDialogOpen, setFinishDialogOpen] = useState(false)
+  const [finishPosting, setFinishPosting] = useState(false)
+  const [finishDialogError, setFinishDialogError] = useState<ApiRequestError | string | null>(
+    null,
+  )
+  const [finishPartialNotice, setFinishPartialNotice] = useState(false)
+
+  const finishTripButtonLabel = useMemo(() => {
+    if (!travel || !members) return ''
+    const hasProgressFields =
+      typeof travel.memberCount === 'number' &&
+      typeof travel.finishedAckCount === 'number'
+    if (travel.youHaveAcked && travel.status === 'active' && hasProgressFields) {
+      return t('travelDetail.finishTripProgress', {
+        acked: String(travel.finishedAckCount),
+        total: String(travel.memberCount),
+      })
+    }
+    return t('travelDetail.finishTrip')
+  }, [travel, members, t])
 
   const expenseGroups = useMemo(() => {
     if (!expenses) return []
@@ -134,6 +164,40 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
     }
   }, [travelId, i18next])
 
+  useEffect(() => {
+    if (!finishDialogOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !finishPosting) {
+        e.preventDefault()
+        setFinishDialogOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [finishDialogOpen, finishPosting])
+
+  const onConfirmFinish = useCallback(async () => {
+    if (!travel) return
+    setFinishPosting(true)
+    setFinishDialogError(null)
+    try {
+      const res = await postTravelFinish(travel.id)
+      setFinishDialogOpen(false)
+      if (res.allMembersHaveAcked) {
+        navigate(`/travels/${travel.id}/settlement`)
+        return
+      }
+      const tr = await fetchTravel(travel.id)
+      setTravel(tr)
+      setFinishPartialNotice(true)
+    } catch (e: unknown) {
+      if (e instanceof ApiRequestError) setFinishDialogError(e)
+      else setFinishDialogError(t('travelDetail.finishFailed'))
+    } finally {
+      setFinishPosting(false)
+    }
+  }, [navigate, t, travel])
+
   return (
     <main className="travel-detail__main">
       <nav className="travel-detail__crumb" aria-label={t('common.ariaBreadcrumb')}>
@@ -150,6 +214,27 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
         <TravelDetailSkeleton />
       ) : (
         <>
+          {finishPartialNotice ? (
+            <div className="travel-detail__finish-notice" role="status">
+              <p className="travel-detail__finish-notice-text">{t('travelDetail.finishPartialSuccess')}</p>
+              <div className="travel-detail__finish-notice-actions">
+                <Link
+                  className="travel-detail__btn travel-detail__btn--secondary travel-detail__btn--compact"
+                  to={`/travels/${travel.id}/settlement`}
+                >
+                  {t('travelDetail.openSettlementPage')}
+                </Link>
+                <button
+                  type="button"
+                  className="travel-detail__btn travel-detail__btn--primary travel-detail__btn--compact"
+                  onClick={() => setFinishPartialNotice(false)}
+                >
+                  {t('travelDetail.finishPartialDismiss')}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <div className="travel-detail__sticky">
             <div className="travel-detail__sticky-inner">
               <div className="travel-detail__sticky-text">
@@ -168,12 +253,27 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
                 >
                   {t('travelDetail.openPeoplePage')}
                 </Link>
-                <Link
-                  className="travel-detail__btn travel-detail__btn--secondary"
-                  to={`/travels/${travel.id}/settlement`}
-                >
-                  {t('travelDetail.settlement')}
-                </Link>
+                {travel.status === 'settled' ? (
+                  <Link
+                    className="travel-detail__btn travel-detail__btn--secondary"
+                    to={`/travels/${travel.id}/settlement`}
+                  >
+                    {t('travelDetail.viewSettlement')}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="travel-detail__btn travel-detail__btn--secondary"
+                    onClick={() => {
+                      setFinishPartialNotice(false)
+                      setFinishDialogError(null)
+                      setFinishDialogOpen(true)
+                    }}
+                    aria-label={finishTripButtonLabel}
+                  >
+                    {finishTripButtonLabel}
+                  </button>
+                )}
                 <Link
                   className="travel-detail__btn travel-detail__btn--primary"
                   to={`/travels/${travel.id}/expenses/new`}
@@ -326,6 +426,58 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
               </>
             )}
           </section>
+
+          {finishDialogOpen && typeof document !== 'undefined'
+            ? createPortal(
+                <div className="travel-detail__finish-portal">
+                  <div
+                    className="travel-detail__finish-backdrop"
+                    aria-hidden="true"
+                    onClick={() => {
+                      if (!finishPosting) setFinishDialogOpen(false)
+                    }}
+                  />
+                  <div
+                    className="travel-detail__finish-sheet"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby={finishDialogTitleId}
+                  >
+                    <div className="travel-detail__finish-sheet-inner">
+                      <h2 id={finishDialogTitleId} className="travel-detail__finish-title">
+                        {t('travelDetail.finishConfirmTitle')}
+                      </h2>
+                      <p className="travel-detail__finish-body">{t('travelDetail.finishConfirmBody')}</p>
+                      {finishDialogError ? (
+                        <ApiErrorBanner
+                          className="travel-detail__finish-banner"
+                          error={finishDialogError}
+                        />
+                      ) : null}
+                      <div className="travel-detail__finish-actions">
+                        <button
+                          type="button"
+                          className="travel-detail__btn travel-detail__btn--secondary"
+                          disabled={finishPosting}
+                          onClick={() => setFinishDialogOpen(false)}
+                        >
+                          {t('common.cancel')}
+                        </button>
+                        <button
+                          type="button"
+                          className="travel-detail__btn travel-detail__btn--primary"
+                          disabled={finishPosting}
+                          onClick={() => void onConfirmFinish()}
+                        >
+                          {finishPosting ? t('common.saving') : t('travelDetail.finishConfirmSubmit')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>,
+                document.body,
+              )
+            : null}
         </>
       )}
     </main>
