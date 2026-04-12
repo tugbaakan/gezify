@@ -12,17 +12,7 @@ export function TravelDetailSkeleton() {
         <div className="travel-detail-skel__actions">
           <span className="travel-detail-skel__btn gf-skel" />
           <span className="travel-detail-skel__btn gf-skel" />
-        </div>
-      </div>
-      <div className="travel-detail-skel__section">
-        <div className="travel-detail-skel__h2 gf-skel" />
-        <div className="travel-detail-skel__member">
-          <span className="travel-detail-skel__line gf-skel" />
-          <span className="travel-detail-skel__line travel-detail-skel__line--short gf-skel" />
-        </div>
-        <div className="travel-detail-skel__member">
-          <span className="travel-detail-skel__line gf-skel" />
-          <span className="travel-detail-skel__line travel-detail-skel__line--short gf-skel" />
+          <span className="travel-detail-skel__btn gf-skel" />
         </div>
       </div>
       <div className="travel-detail-skel__section">

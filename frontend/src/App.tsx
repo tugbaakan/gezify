@@ -8,6 +8,7 @@ import NewExpensePage from './pages/NewExpensePage'
 import SettlementPage from './pages/SettlementPage'
 import TravelDetailPage from './pages/TravelDetailPage'
 import TravelListPage from './pages/TravelListPage'
+import TravelPeoplePage from './pages/TravelPeoplePage'
 
 function App() {
   return (
@@ -23,6 +24,14 @@ function App() {
               element={
                 <RequireAuth>
                   <TravelDetailPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/travels/:id/people"
+              element={
+                <RequireAuth>
+                  <TravelPeoplePage />
                 </RequireAuth>
               }
             />

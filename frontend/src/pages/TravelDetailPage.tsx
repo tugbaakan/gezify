@@ -3,35 +3,20 @@ import {
   useMemo,
   useState,
   type CSSProperties,
-  type FormEvent,
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import {
-  createTravelInvitation,
-  fetchTravel,
-  fetchTravelExpenses,
-  fetchTravelInvitations,
-  fetchTravelMembers,
-} from '../api/travels'
-import type {
-  ExpenseCategory,
-  ExpenseDetail,
-  TravelDetail,
-  TravelInvitationListItem,
-  TravelMember,
-} from '../api/types'
+import { fetchTravel, fetchTravelExpenses } from '../api/travels'
+import type { ExpenseCategory, ExpenseDetail, TravelDetail } from '../api/types'
 import { ApiRequestError } from '../api/client'
 import { ApiErrorBanner } from '../components/ApiErrorBanner'
 import { AppLayout } from '../components/AppLayout'
 import { TravelDetailSkeleton } from '../components/TravelDetailSkeleton'
-import { firstValidationDetailMessage } from '../utils/apiErrorDisplay'
 import {
   expenseCategoriesForFilter,
   formatExpenseCategory,
   formatForeignAmount,
   formatTry,
-  invitationStatusLabel,
   travelStatusChipTone,
   travelStatusLabel,
   travelStatusShort,
@@ -97,13 +82,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
   const locale = i18next.language
   const [travel, setTravel] = useState<TravelDetail | null>(null)
   const [expenses, setExpenses] = useState<ExpenseDetail[] | null>(null)
-  const [members, setMembers] = useState<TravelMember[] | null>(null)
-  const [invitations, setInvitations] = useState<TravelInvitationListItem[] | null>(null)
   const [error, setError] = useState<ApiRequestError | string | null>(null)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteBusy, setInviteBusy] = useState(false)
-  const [inviteError, setInviteError] = useState<string | null>(null)
-  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
   const [expenseSort, setExpenseSort] = useState<ExpenseSort>('date-desc')
   const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory | 'all'>('all')
 
@@ -120,19 +99,12 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([
-      fetchTravel(travelId),
-      fetchTravelExpenses(travelId),
-      fetchTravelMembers(travelId),
-      fetchTravelInvitations(travelId),
-    ])
-      .then(([tr, ex, m, inv]) => {
+    Promise.all([fetchTravel(travelId), fetchTravelExpenses(travelId)])
+      .then(([tr, ex]) => {
         if (!cancelled) {
           setError(null)
           setTravel(tr)
           setExpenses(ex)
-          setMembers(m)
-          setInvitations(inv)
         }
       })
       .catch((e: unknown) => {
@@ -147,36 +119,6 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
     }
   }, [travelId, i18next])
 
-  const canInvite = travel?.status === 'active'
-
-  async function onInviteSubmit(e: FormEvent) {
-    e.preventDefault()
-    setInviteError(null)
-    setInviteSuccess(null)
-    const trimmed = inviteEmail.trim()
-    if (!trimmed) {
-      setInviteError(t('travelDetail.inviteEmailRequired'))
-      return
-    }
-    setInviteBusy(true)
-    try {
-      await createTravelInvitation(travelId, trimmed)
-      const nextInv = await fetchTravelInvitations(travelId)
-      setInvitations(nextInv)
-      setInviteSuccess(t('travelDetail.inviteSuccess', { email: trimmed }))
-      setInviteEmail('')
-    } catch (e: unknown) {
-      if (e instanceof ApiRequestError) {
-        const detail = firstValidationDetailMessage(e)
-        setInviteError(detail ?? e.message)
-      } else {
-        setInviteError(t('travelDetail.inviteSendFailed'))
-      }
-    } finally {
-      setInviteBusy(false)
-    }
-  }
-
   return (
     <main className="travel-detail__main">
       <nav className="travel-detail__crumb" aria-label={t('common.ariaBreadcrumb')}>
@@ -189,7 +131,7 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
 
       {error ? (
         <ApiErrorBanner className="travel-detail__banner" error={error} />
-      ) : !travel || !expenses || !members || !invitations ? (
+      ) : !travel || !expenses ? (
         <TravelDetailSkeleton />
       ) : (
         <>
@@ -207,6 +149,12 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
               <div className="travel-detail__actions">
                 <Link
                   className="travel-detail__btn travel-detail__btn--secondary"
+                  to={`/travels/${travel.id}/people`}
+                >
+                  {t('travelDetail.openPeoplePage')}
+                </Link>
+                <Link
+                  className="travel-detail__btn travel-detail__btn--secondary"
                   to={`/travels/${travel.id}/settlement`}
                 >
                   {t('travelDetail.settlement')}
@@ -220,132 +168,6 @@ function TravelDetailContent({ travelId }: { travelId: string }) {
               </div>
             </div>
           </div>
-
-          <section
-            className="travel-detail__section travel-detail__section--members"
-            aria-labelledby="members-heading"
-          >
-            <h2 id="members-heading" className="travel-detail__section-title">
-              {t('travelDetail.group')}
-            </h2>
-            <ul className="travel-detail__members motion-list">
-              {members.map((m, i) => (
-                <li
-                  key={m.userId}
-                  className="travel-detail__member"
-                  style={{ ['--stagger' as string]: String(i) } as CSSProperties}
-                >
-                  <span className="travel-detail__member-name">{memberLabel(m)}</span>
-                  <span className="travel-detail__member-email">{m.email}</span>
-                </li>
-              ))}
-            </ul>
-
-            {canInvite ? (
-              <form className="travel-detail__invite" onSubmit={onInviteSubmit}>
-                <label className="travel-detail__invite-label" htmlFor="invite-email">
-                  {t('travelDetail.inviteFriend')}
-                </label>
-                <p className="travel-detail__invite-hint" id="invite-email-desc">
-                  {t('travelDetail.inviteHint')}
-                </p>
-                <div className="travel-detail__invite-row">
-                  <input
-                    id="invite-email"
-                    className="travel-detail__invite-input"
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    placeholder={t('travelDetail.invitePlaceholder')}
-                    value={inviteEmail}
-                    onChange={(ev) => setInviteEmail(ev.target.value)}
-                    disabled={inviteBusy}
-                    aria-describedby="invite-email-desc"
-                  />
-                  <button
-                    type="submit"
-                    className="travel-detail__btn travel-detail__btn--secondary travel-detail__invite-submit"
-                    disabled={inviteBusy}
-                  >
-                    {inviteBusy ? t('common.sending') : t('travelDetail.sendInvite')}
-                  </button>
-                </div>
-                {inviteError ? (
-                  <p className="travel-detail__invite-msg travel-detail__invite-msg--error" role="alert">
-                    {inviteError}
-                  </p>
-                ) : null}
-                {inviteSuccess ? (
-                  <p className="travel-detail__invite-msg travel-detail__invite-msg--ok" role="status">
-                    {inviteSuccess}
-                  </p>
-                ) : null}
-              </form>
-            ) : (
-              <p className="travel-detail__muted travel-detail__invite-disabled">
-                {t('travelDetail.inviteDisabled')}
-              </p>
-            )}
-
-            <div className="travel-detail__invites-table-wrap">
-              <h3 className="travel-detail__invites-table-title" id="invites-table-heading">
-                {t('travelDetail.invitations')}
-              </h3>
-              {invitations.length === 0 ? (
-                <p className="travel-detail__muted">{t('travelDetail.noInvitesYet')}</p>
-              ) : (
-                <div
-                  className="travel-detail__table-scroll"
-                  role="region"
-                  aria-labelledby="invites-table-heading"
-                  tabIndex={0}
-                >
-                  <table className="travel-detail__table">
-                    <thead>
-                      <tr>
-                        <th scope="col">{t('common.email')}</th>
-                        <th scope="col">{t('common.status')}</th>
-                        <th scope="col">{t('common.sent')}</th>
-                        <th scope="col">{t('common.accepted')}</th>
-                        <th scope="col">{t('common.invitedBy')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invitations.map((row) => (
-                        <tr key={row.id}>
-                          <td className="travel-detail__table-cell--email">{row.email}</td>
-                          <td>
-                            <span
-                              className={`travel-detail__invite-status travel-detail__invite-status--${row.status}`}
-                            >
-                              {invitationStatusLabel(row.status)}
-                            </span>
-                          </td>
-                          <td className="travel-detail__table-cell--date">
-                            {new Date(row.createdAt).toLocaleString(locale, {
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                            })}
-                          </td>
-                          <td className="travel-detail__table-cell--date">
-                            {row.acceptedAt
-                              ? new Date(row.acceptedAt).toLocaleString(locale, {
-                                  dateStyle: 'medium',
-                                  timeStyle: 'short',
-                                })
-                              : t('common.dash')}
-                          </td>
-                          <td>
-                            {row.invitedByDisplayName?.trim() || row.invitedByEmail}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </section>
 
           <section className="travel-detail__section" aria-labelledby="exp-heading">
             <h2 id="exp-heading" className="travel-detail__section-title">

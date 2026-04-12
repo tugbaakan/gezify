@@ -58,6 +58,7 @@ export const en = {
     missingId: 'Trip id is missing.',
     breadcrumbTrips: 'Travels',
     tripFallback: 'Trip',
+    openPeoplePage: 'Members & invites',
     settlement: 'Settlement',
     addExpense: 'Add expense',
     group: 'Group',
@@ -88,6 +89,13 @@ export const en = {
     inviteSendFailed: 'Could not send invitation.',
     inviteSuccess:
       'Invitation sent to {{email}}. They can join using the link in the email (Google account must match that address).',
+  },
+  travelPeople: {
+    title: 'Members & invitations',
+    loadFailed: 'Could not load members or invitations.',
+    missingId: 'Trip id is missing.',
+    backToTrip: 'Back to trip',
+    loading: 'Loading group…',
   },
   newExpense: {
     membersLoadFailed: 'Could not load members.',

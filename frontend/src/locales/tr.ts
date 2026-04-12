@@ -60,6 +60,7 @@ export const tr = {
     missingId: 'Gezi kimliği eksik.',
     breadcrumbTrips: 'Geziler',
     tripFallback: 'Gezi',
+    openPeoplePage: 'Üyeler ve davetler',
     settlement: 'Geziyi bitir',
     addExpense: 'Harcama ekle',
     group: 'Grup',
@@ -90,6 +91,13 @@ export const tr = {
     inviteSendFailed: 'Davet gönderilemedi.',
     inviteSuccess:
       '{{email}} adresine davet gönderildi. E-postadaki bağlantıyla katılabilirler (Google hesabı bu adresle eşleşmeli).',
+  },
+  travelPeople: {
+    title: 'Üyeler ve davetler',
+    loadFailed: 'Üyeler veya davetler yüklenemedi.',
+    missingId: 'Gezi kimliği eksik.',
+    backToTrip: 'Geziye dön',
+    loading: 'Grup yükleniyor…',
   },
   newExpense: {
     membersLoadFailed: 'Üyeler yüklenemedi.',
