@@ -45,6 +45,8 @@ export const en = {
     heroLede:
       'Track shared expenses in TRY, invite your crew, and settle up when the trip wraps — all in one place.',
     yourTravels: 'Your travels',
+    signedInSubtitle:
+      'Track shared costs, invite your group, and settle when each trip wraps.',
     signInTitle: 'Sign in to continue',
     signInCopy: 'Create a trip, add expenses, and see balances when you finish.',
     newTrip: 'New trip',
@@ -52,6 +54,7 @@ export const en = {
     create: 'Create',
     emptyTitle: 'No trips yet',
     emptyCopy: 'Create a new trip above to start tracking shared expenses.',
+    tripListTitle: 'Trip list',
   },
   travelDetail: {
     loadFailed: 'Could not load trip.',
@@ -159,8 +162,9 @@ export const en = {
       'Total {{total}} · {{count}} {{people}} · ~ {{each}} each (rounded)',
     person: 'person',
     people: 'people',
-    balancePaidShare:
-      'paid {{paid}} · share {{share}} · net {{net}}',
+    balanceLinePaid: 'paid {{paid}}',
+    balanceLineShare: 'share {{share}}',
+    balanceLineNet: 'net {{net}}',
     backToTrip: '← Back to trip',
     copyTry: 'Copy TRY',
     copied: 'Copied',

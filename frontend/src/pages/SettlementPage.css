@@ -128,10 +128,26 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 0.35rem 1rem;
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--border);
   font-size: 0.875rem;
+}
+
+.settlement__balance-figures {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: flex-end;
+  text-align: right;
+  min-width: 0;
+}
+
+.settlement__balance-line {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text-h);
 }
 
 .settlement__balance-row:last-child {

@@ -229,13 +229,23 @@ function SettlementContent({ travelId }: { travelId: string }) {
                       <span className="settlement__party">
                         {personLabel(m.email, m.displayName)}
                       </span>
-                      <span className="settlement__amount">
-                        {t('settlement.balancePaidShare', {
-                          paid: formatTry(m.paidTry),
-                          share: formatTry(m.shareOwedTry),
-                          net: formatTry(m.netTry),
-                        })}
-                      </span>
+                      <div className="settlement__balance-figures">
+                        <span className="settlement__balance-line">
+                          {t('settlement.balanceLinePaid', {
+                            paid: formatTry(m.paidTry),
+                          })}
+                        </span>
+                        <span className="settlement__balance-line">
+                          {t('settlement.balanceLineShare', {
+                            share: formatTry(m.shareOwedTry),
+                          })}
+                        </span>
+                        <span className="settlement__balance-line">
+                          {t('settlement.balanceLineNet', {
+                            net: formatTry(m.netTry),
+                          })}
+                        </span>
+                      </div>
                     </li>
                   ))}
                 </ul>

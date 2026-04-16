@@ -22,7 +22,14 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="app-layout">
       <header className="app-layout__header">
         <Link className="app-layout__brand" to="/">
-          <span className="app-layout__logo" aria-hidden="true" />
+          <img
+            className="app-layout__logo"
+            src="/gezify-logo.png"
+            alt=""
+            width={32}
+            height={32}
+            decoding="async"
+          />
           <span className="app-layout__wordmark">Gezify</span>
         </Link>
         <div className="app-layout__header-right">

@@ -14,6 +14,35 @@
   }
 }
 
+.travel-list__page-head {
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .travel-list__page-head {
+    margin-bottom: 1.75rem;
+  }
+}
+
+.travel-list__page-title {
+  font-family: var(--heading);
+  font-weight: 400;
+  font-size: clamp(1.65rem, 3.5vw, 2.1rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-h);
+  margin: 0 0 0.5rem;
+  text-wrap: balance;
+}
+
+.travel-list__page-sub {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0;
+  max-width: 40ch;
+}
+
 .travel-list__loading {
   margin: 0;
   color: var(--text);
@@ -50,6 +79,48 @@
   overflow: hidden;
 }
 
+.travel-list__signed-in-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .travel-list__signed-in-stack {
+    gap: 1.5rem;
+  }
+}
+
+.travel-list__surface {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  border-color: color-mix(in srgb, var(--border) 85%, var(--accent) 15%);
+  overflow: hidden;
+}
+
+.travel-list__list-panel-head {
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 94%, var(--accent) 6%);
+}
+
+@media (min-width: 640px) {
+  .travel-list__list-panel-head {
+    padding-inline: 1.5rem;
+  }
+}
+
+.travel-list__list-panel-title {
+  font-family: var(--heading);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--text-h);
+  margin: 0;
+}
+
 .travel-list__panel-head {
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border);
@@ -65,36 +136,93 @@
   letter-spacing: -0.02em;
 }
 
-.travel-list__create {
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
+.travel-list__composer {
+  margin: 0;
+  padding: 1rem 1.25rem 1.1rem;
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--accent) 9%, var(--bg)) 0%,
+    var(--bg) 52%
+  );
+}
+
+@media (min-width: 640px) {
+  .travel-list__composer {
+    padding: 1.15rem 1.5rem 1.2rem;
+  }
+}
+
+.travel-list__composer-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.travel-list__composer-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 12px;
+  font-size: 1.35rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--bg) 40%, transparent);
+}
+
+@media (min-width: 640px) {
+  .travel-list__composer-badge {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 14px;
+  }
+}
+
+.travel-list__composer-fields {
+  flex: 1;
+  min-width: 0;
 }
 
 .travel-list__label {
   display: block;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-h);
-  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 0.45rem;
+  opacity: 0.92;
 }
 
 .travel-list__create-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: stretch;
 }
 
 .travel-list__input {
   flex: 1 1 12rem;
   font: inherit;
   font-size: 0.9375rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text-h);
   min-width: 0;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.travel-list__input:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
 }
 
 .travel-list__input:focus-visible {
@@ -106,17 +234,27 @@
   font: inherit;
   font-size: 0.875rem;
   font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
+  padding: 0.55rem 1.1rem;
+  border-radius: 12px;
   border: none;
   background: var(--accent);
   color: var(--accent-fg);
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--accent-hover) 35%, transparent);
+  transition:
+    background 0.15s ease,
+    transform var(--motion-duration-press) var(--motion-ease-out),
+    box-shadow 0.15s ease;
 }
 
 .travel-list__primary:hover {
   background: var(--accent-hover);
+  box-shadow: 0 2px 10px var(--accent-soft);
+}
+
+.travel-list__primary:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .travel-list__primary:disabled {
@@ -124,13 +262,28 @@
   cursor: not-allowed;
 }
 
-.travel-list__banner {
-  margin-left: 1.25rem;
-  margin-right: 1.25rem;
+.travel-list__composer .travel-list__banner {
+  margin: 0.65rem 0 0;
+  border-radius: 10px;
 }
 
-.travel-list__banner:first-of-type {
-  margin-top: 0.5rem;
+.travel-list__list-panel > .api-error-banner.travel-list__banner {
+  margin: 0.75rem 1.25rem 0;
+  border-radius: 10px;
+}
+
+@media (min-width: 640px) {
+  .travel-list__list-panel > .api-error-banner.travel-list__banner {
+    margin-inline: 1.5rem;
+  }
+}
+
+.travel-list__list-panel .travel-list__items > li:first-child .travel-list__link {
+  border-top: none;
+}
+
+.travel-list__list-panel .travel-list-skel__row:first-child {
+  border-top: none;
 }
 
 .travel-list__empty {
@@ -138,18 +291,45 @@
   text-align: center;
 }
 
+.travel-list__empty--signed-in {
+  padding: 2.75rem 1.5rem 3rem;
+}
+
+.travel-list__empty-visual {
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 30% 28%,
+      color-mix(in srgb, var(--accent) 45%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 70% 65%,
+      color-mix(in srgb, var(--accent-secondary) 35%, transparent),
+      transparent 50%
+    ),
+    color-mix(in srgb, var(--accent) 8%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--bg) 50%, transparent);
+}
+
 .travel-list__empty-title {
-  font-weight: 600;
+  font-family: var(--heading);
+  font-weight: 400;
   color: var(--text-h);
   margin: 0 0 0.5rem;
-  font-size: 1rem;
+  font-size: 1.125rem;
+  letter-spacing: -0.02em;
 }
 
 .travel-list__empty-copy {
   font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--text);
-  margin: 0 auto 1rem;
+  margin: 0 auto;
   max-width: 28ch;
 }
 
@@ -163,8 +343,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem 1rem;
-  padding: 1rem 1.25rem;
+  gap: 0.65rem 0.75rem;
+  padding: 1.05rem 1.25rem;
   text-decoration: none;
   color: var(--text-h);
   border-top: 1px solid var(--border);
@@ -174,20 +354,57 @@
     filter var(--motion-duration-press) var(--motion-ease-out);
 }
 
+.travel-list__list-panel .travel-list__link {
+  padding-inline: 1.35rem;
+}
+
+@media (min-width: 640px) {
+  .travel-list__list-panel .travel-list__link {
+    padding-inline: 1.5rem;
+  }
+}
+
 .travel-list__link:hover {
-  background: color-mix(in srgb, var(--bg) 90%, var(--accent) 10%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 7%, var(--bg)),
+    color-mix(in srgb, var(--bg) 92%, var(--accent) 8%)
+  );
 }
 
 .travel-list__link:focus-visible {
   outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-  border-radius: 2px;
+  outline-offset: -2px;
+  border-radius: 0;
+}
+
+.travel-list__link::after {
+  content: '';
+  display: block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  opacity: 0.22;
+  flex-shrink: 0;
+  align-self: center;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.travel-list__link:hover::after {
+  opacity: 0.5;
+  transform: rotate(-45deg) translate(2px, -2px);
 }
 
 .travel-list__link-name {
   font-weight: 500;
   min-width: 0;
   flex: 1;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
 }
 
 .travel-list__status-chip {
@@ -223,6 +440,7 @@
 }
 
 .travel-list__status-chip--done {
-  background: color-mix(in srgb, var(--text) 12%, var(--bg));
-  color: var(--text-h);
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+  color: var(--accent-text);
 }

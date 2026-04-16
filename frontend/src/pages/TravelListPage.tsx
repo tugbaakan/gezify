@@ -101,9 +101,11 @@ export function TravelListPage() {
               className="travel-list__panel"
               aria-labelledby="travels-heading"
             >
-              <h2 id="travels-heading" className="travel-list__section-title">
-                {t('travelList.yourTravels')}
-              </h2>
+              <div className="travel-list__panel-head">
+                <h2 id="travels-heading" className="travel-list__section-title">
+                  {t('travelList.yourTravels')}
+                </h2>
+              </div>
               <div className="travel-list__empty" role="status">
                 <p className="travel-list__empty-title">{t('travelList.signInTitle')}</p>
                 <p className="travel-list__empty-copy">{t('travelList.signInCopy')}</p>
@@ -119,75 +121,97 @@ export function TravelListPage() {
           </>
         ) : (
           <>
-            <section
-              className="travel-list__panel"
-              aria-labelledby="travels-heading"
-            >
-              <div className="travel-list__panel-head">
-                <h2 id="travels-heading" className="travel-list__section-title">
-                  {t('travelList.yourTravels')}
-                </h2>
-              </div>
+            <header className="travel-list__page-head">
+              <h1 id="travels-heading" className="travel-list__page-title">
+                {t('travelList.yourTravels')}
+              </h1>
+              <p className="travel-list__page-sub">{t('travelList.signedInSubtitle')}</p>
+            </header>
 
-              <form className="travel-list__create" onSubmit={onCreateTravel}>
-                <label className="travel-list__label" htmlFor="new-travel-name">
-                  {t('travelList.newTrip')}
-                </label>
-                <div className="travel-list__create-row">
-                  <input
-                    id="new-travel-name"
-                    className="travel-list__input"
-                    value={newName}
-                    onChange={(ev) => setNewName(ev.target.value)}
-                    placeholder={t('travelList.tripPlaceholder')}
-                    maxLength={512}
-                    autoComplete="off"
-                  />
-                  <button
-                    type="submit"
-                    className="travel-list__primary"
-                    disabled={creating || !newName.trim()}
-                  >
-                    {creating ? t('common.creating') : t('travelList.create')}
-                  </button>
-                </div>
-                {createError ? (
-                  <ApiErrorBanner className="travel-list__banner" error={createError} />
-                ) : null}
-              </form>
-
-              {listError ? (
-                <ApiErrorBanner className="travel-list__banner" error={listError} />
-              ) : null}
-
-              {listLoading && travels === null ? (
-                <TravelListSkeleton />
-              ) : !listError && travels !== null && travels.length === 0 ? (
-                <div className="travel-list__empty" role="status">
-                  <p className="travel-list__empty-title">{t('travelList.emptyTitle')}</p>
-                  <p className="travel-list__empty-copy">{t('travelList.emptyCopy')}</p>
-                </div>
-              ) : !listError && travels !== null && travels.length > 0 ? (
-                <ul className="travel-list__items motion-list">
-                  {travels.map((tr, i) => (
-                    <li
-                      key={tr.id}
-                      style={{ ['--stagger' as string]: String(i) } as CSSProperties}
-                    >
-                      <Link className="travel-list__link" to={`/travels/${tr.id}`}>
-                        <span className="travel-list__link-name">{tr.name}</span>
-                        <span
-                          className={`travel-list__status-chip travel-list__status-chip--${travelStatusChipTone(tr.status)}`}
-                          aria-label={travelStatusLabel(tr.status)}
+            <div className="travel-list__signed-in-stack">
+              <section
+                className="travel-list__surface travel-list__composer-panel"
+                aria-label={t('travelList.newTrip')}
+              >
+                <form className="travel-list__composer" onSubmit={onCreateTravel}>
+                  <div className="travel-list__composer-inner">
+                    <span className="travel-list__composer-badge" aria-hidden="true">
+                      +
+                    </span>
+                    <div className="travel-list__composer-fields">
+                      <label className="travel-list__label" htmlFor="new-travel-name">
+                        {t('travelList.newTrip')}
+                      </label>
+                      <div className="travel-list__create-row">
+                        <input
+                          id="new-travel-name"
+                          className="travel-list__input"
+                          value={newName}
+                          onChange={(ev) => setNewName(ev.target.value)}
+                          placeholder={t('travelList.tripPlaceholder')}
+                          maxLength={512}
+                          autoComplete="off"
+                        />
+                        <button
+                          type="submit"
+                          className="travel-list__primary"
+                          disabled={creating || !newName.trim()}
                         >
-                          {travelStatusShort(tr.status)}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </section>
+                          {creating ? t('common.creating') : t('travelList.create')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  {createError ? (
+                    <ApiErrorBanner className="travel-list__banner" error={createError} />
+                  ) : null}
+                </form>
+              </section>
+
+              <section
+                className="travel-list__surface travel-list__list-panel"
+                aria-labelledby="trip-list-title"
+              >
+                <div className="travel-list__list-panel-head">
+                  <h2 id="trip-list-title" className="travel-list__list-panel-title">
+                    {t('travelList.tripListTitle')}
+                  </h2>
+                </div>
+
+                {listError ? (
+                  <ApiErrorBanner className="travel-list__banner" error={listError} />
+                ) : null}
+
+                {listLoading && travels === null ? (
+                  <TravelListSkeleton />
+                ) : !listError && travels !== null && travels.length === 0 ? (
+                  <div className="travel-list__empty travel-list__empty--signed-in" role="status">
+                    <div className="travel-list__empty-visual" aria-hidden="true" />
+                    <p className="travel-list__empty-title">{t('travelList.emptyTitle')}</p>
+                    <p className="travel-list__empty-copy">{t('travelList.emptyCopy')}</p>
+                  </div>
+                ) : !listError && travels !== null && travels.length > 0 ? (
+                  <ul className="travel-list__items motion-list">
+                    {travels.map((tr, i) => (
+                      <li
+                        key={tr.id}
+                        style={{ ['--stagger' as string]: String(i) } as CSSProperties}
+                      >
+                        <Link className="travel-list__link" to={`/travels/${tr.id}`}>
+                          <span className="travel-list__link-name">{tr.name}</span>
+                          <span
+                            className={`travel-list__status-chip travel-list__status-chip--${travelStatusChipTone(tr.status)}`}
+                            aria-label={travelStatusLabel(tr.status)}
+                          >
+                            {travelStatusShort(tr.status)}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </section>
+            </div>
           </>
         )}
       </main>

@@ -43,10 +43,12 @@ export const tr = {
   travelList: {
     loadFailed: 'Geziler yüklenemedi.',
     createFailed: 'Gezi oluşturulamadı.',
-    heroTitle: 'Tablo derdine girmeden gezi masraflarını paylaş.',
+    heroTitle: 'Hesaplama derdine girmeden gezi masraflarını paylaş.',
     heroLede:
       'Ortak harcamaları TRY ile takip et, ekibini davet et, gezi bitince hesabı kapat — hepsi tek yerde.',
     yourTravels: 'Gezilerin',
+    signedInSubtitle:
+      'Ortak harcamaları takip et, grubunu davet et, gezi bitince hesabı kapat.',
     signInTitle: 'Devam etmek için giriş yap',
     signInCopy: 'Gezi oluştur, harcama ekle, bitince bakiyeleri gör.',
     newTrip: 'Yeni gezi',
@@ -54,6 +56,7 @@ export const tr = {
     create: 'Oluştur',
     emptyTitle: 'Henüz gezi yok',
     emptyCopy: 'Yukarıdan yeni bir gezi oluşturarak ortak harcamaları takip etmeye başla.',
+    tripListTitle: 'Gezi listesi',
   },
   travelDetail: {
     loadFailed: 'Gezi yüklenemedi.',
@@ -160,7 +163,9 @@ export const tr = {
       'Toplam {{total}} · {{count}} {{people}} · kişi başı ~ {{each}} (yuvarlanmış)',
     person: 'kişi',
     people: 'kişi',
-    balancePaidShare: 'ödedi {{paid}} · pay {{share}} · net {{net}}',
+    balanceLinePaid: 'ödedi {{paid}}',
+    balanceLineShare: 'pay {{share}}',
+    balanceLineNet: 'net {{net}}',
     backToTrip: '← Geziye dön',
     copyTry: "TRY'yi kopyala",
     copied: 'Kopyalandı',
