@@ -51,6 +51,13 @@ builder.Services.PostConfigure<ExchangeRateOptions>(opts =>
     if (string.IsNullOrWhiteSpace(opts.ApiKey))
         opts.ApiKey = configuration["EXCHANGE_RATE_API_KEY"] ?? string.Empty;
 });
+builder.Services.PostConfigure<GoogleAuthOptions>(opts =>
+{
+    if (!string.IsNullOrWhiteSpace(configuration["GOOGLE_CLIENT_ID"]))
+        opts.ClientId = configuration["GOOGLE_CLIENT_ID"]!;
+    if (!string.IsNullOrWhiteSpace(configuration["GOOGLE_CLIENT_SECRET"]))
+        opts.ClientSecret = configuration["GOOGLE_CLIENT_SECRET"]!;
+});
 
 // Domain config: also Invitation:BaseUrl, Invitation:SigningKey, SendGrid:*, ExchangeRate:ApiKey (see appsettings).
 
@@ -74,6 +81,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(dataSource));
 
 var port = Environment.GetEnvironmentVariable("PORT");
+if (string.IsNullOrEmpty(port) && builder.Environment.IsProduction())
+    port = "8080";
 if (!string.IsNullOrEmpty(port))
     builder.WebHost.UseUrls($"http://+:{port}");
 

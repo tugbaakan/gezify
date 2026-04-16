@@ -13,6 +13,13 @@ public static class AuthWebApplicationExtensions
         builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
         builder.Services.Configure<JwtAuthOptions>(builder.Configuration.GetSection(JwtAuthOptions.SectionName));
 
+        builder.Services.PostConfigure<JwtAuthOptions>(opts =>
+        {
+            var resolved = ResolveJwtSecretKey(builder.Configuration);
+            if (!string.IsNullOrWhiteSpace(resolved))
+                opts.SecretKey = resolved;
+        });
+
         builder.Services.AddHttpClient(nameof(GoogleOAuthService), client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);
@@ -22,10 +29,10 @@ public static class AuthWebApplicationExtensions
         builder.Services.AddSingleton<IGoogleOAuthService, GoogleOAuthService>();
 
         var jwtSection = builder.Configuration.GetSection(JwtAuthOptions.SectionName);
-        var jwtKey = jwtSection["SecretKey"] ?? string.Empty;
+        var jwtKey = ResolveJwtSecretKey(builder.Configuration);
         if (jwtKey.Length < 32)
             throw new InvalidOperationException(
-                "Auth:Jwt:SecretKey must be at least 32 characters. Set via user secrets or AUTH_JWT_SECRET.");
+                "JWT signing key must be at least 32 characters. Set JWT_SECRET, AUTH_JWT_SECRET, or Auth:Jwt:SecretKey (or user secrets).");
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -72,6 +79,15 @@ public static class AuthWebApplicationExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Railway-style flat env vars (<c>JWT_SECRET</c>) and nested config (<c>Auth:Jwt:SecretKey</c>).
+    /// </summary>
+    internal static string ResolveJwtSecretKey(IConfiguration configuration) =>
+        configuration["JWT_SECRET"]
+        ?? configuration["AUTH_JWT_SECRET"]
+        ?? configuration["Auth:Jwt:SecretKey"]
+        ?? string.Empty;
 
     public static WebApplication UseGezifyExceptionHandler(this WebApplication app)
     {
