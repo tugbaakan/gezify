@@ -459,7 +459,7 @@ Settlement transfers:
 | `DATABASE_URL` | Railway-injected PostgreSQL connection string |
 | `GOOGLE_CLIENT_ID` | Google OAuth app client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth app client secret |
-| `JWT_SECRET` | Secret for signing invitation tokens |
+| `AUTH_JWT_SECRETKEY` | Secret for signing invitation tokens |
 | `EXCHANGE_RATE_API_KEY` | ExchangeRate-API key |
 | `SENDGRID_API_KEY` | SendGrid API key |
 | `INVITATION_BASE_URL` | Frontend base URL for invitation links |

@@ -62,7 +62,7 @@
 
 - [x] **GET `/health`** (liveness).
 - [x] Services: static frontend (`npm run build` → `dist`), API (port **8080**), managed Postgres.
-- [x] Env vars: `DATABASE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `JWT_SECRET`, `EXCHANGE_RATE_API_KEY`, `SENDGRID_API_KEY`, `INVITATION_BASE_URL`, `ALLOWED_ORIGIN`.
+- [x] Env vars: `DATABASE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_JWT_SECRETKEY`, `EXCHANGE_RATE_API_KEY`, `SENDGRID_API_KEY`, `INVITATION_BASE_URL`, `ALLOWED_ORIGIN`.
 - [x] Google OAuth app: Authorization Code, scopes `openid`, `email`, `profile`, callback `https://gezify.app/auth/callback` (or env-specific).
 
 ## Security (cross-cutting)

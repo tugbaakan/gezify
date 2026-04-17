@@ -32,7 +32,7 @@ public static class AuthWebApplicationExtensions
         var jwtKey = ResolveJwtSecretKey(builder.Configuration);
         if (jwtKey.Length < 32)
             throw new InvalidOperationException(
-                "JWT signing key must be at least 32 characters. Set JWT_SECRET, AUTH_JWT_SECRET, or Auth:Jwt:SecretKey (or user secrets).");
+                "JWT signing key must be at least 32 characters. Set AUTH_JWT_SECREKEYT, or Auth:Jwt:SecretKey (or user secrets).");
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -81,11 +81,10 @@ public static class AuthWebApplicationExtensions
     }
 
     /// <summary>
-    /// Railway-style flat env vars (<c>JWT_SECRET</c>) and nested config (<c>Auth:Jwt:SecretKey</c>).
+    /// Railway-style flat env vars (<c>AUTH_JWT_SECRETKEY</c>) and nested config (<c>Auth:Jwt:SecretKey</c>).
     /// </summary>
     internal static string ResolveJwtSecretKey(IConfiguration configuration) =>
-        configuration["JWT_SECRET"]
-        ?? configuration["AUTH_JWT_SECRET"]
+        configuration["AUTH_JWT_SECRETKEY"]
         ?? configuration["Auth:Jwt:SecretKey"]
         ?? string.Empty;
 
