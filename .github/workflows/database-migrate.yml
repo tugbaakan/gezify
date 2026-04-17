@@ -1,0 +1,43 @@
+# Applies EF Core migrations to the database using the same connection rules as the API
+# (DATABASE_URL → Npgsql + SSL in non-Development). Run from GitHub Actions so Railway does not need the EF CLI.
+#
+# Required repo secret: DATABASE_URL — use the same value as on Railway (Postgres connection URL).
+# The database must accept connections from GitHub-hosted runners (public Postgres URL / allowed IPs).
+
+name: Database migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/database-migrate.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: database-migrate-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dotnet tools (dotnet-ef)
+        run: dotnet tool restore
+
+      - name: Apply EF Core migrations
+        working-directory: backend
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: >-
+          dotnet ef database update
+          --project Gezify.Api.csproj
+          --startup-project Gezify.Api.csproj
+          --configuration Release
