@@ -1,13 +1,8 @@
 # Multi-stage: SDK publishes; aspnet runtime image runs (dotnet CLI not required at runtime beyond host).
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
 WORKDIR /src
-RUN dotnet tool install --global dotnet-ef
-ENV PATH="${PATH}:/root/.dotnet/tools"
 COPY . .
 RUN dotnet restore
-RUN dotnet ef database update
 RUN dotnet publish Gezify.Api.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0

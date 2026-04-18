@@ -110,10 +110,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseGezifyStatusCodePages();
 
-// §11.3: apply migrations on startup in non-production only; production uses a pre-deploy step.
-if (!app.Environment.IsProduction())
+// Apply migrations on startup so the schema is always up to date when the app begins serving traffic.
+// This runs in all environments — during Docker builds the database is unreachable, so migrations
+// are deferred to here where the production database is accessible.
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
 }
