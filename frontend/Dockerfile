@@ -17,5 +17,9 @@ RUN npm run build
 FROM caddy:2-alpine
 ENV PORT=8080
 EXPOSE 8080
+RUN apk add --no-cache jq
 COPY --from=build /app/dist /srv
 COPY Caddyfile /etc/caddy/Caddyfile
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
