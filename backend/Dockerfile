@@ -4,6 +4,7 @@ WORKDIR /src
 RUN dotnet tool install --global dotnet-ef
 ENV PATH="${PATH}:/root/.dotnet/tools"
 COPY . .
+RUN dotnet restore
 RUN dotnet ef database update
 RUN dotnet publish Gezify.Api.csproj -c Release -o /app/publish
 
